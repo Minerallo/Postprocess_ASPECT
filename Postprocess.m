@@ -1,10 +1,13 @@
 % This Postprocess file allows to set parameters for the modules as well as to choose which module to call and plot the results.
 clear all; close all; clc;
+
+%Crameri colors
+addpath './crameri/';
 %%% Parameter section
 % path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/035_init_from034_discrC_umin1e21_test_temperature_alpha/';
 % '/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/mobility_function/test_heatmap/';
-path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/036_145My_test_mob_alpha10/';
-
+% path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/036_145My_test_mob_alpha10/';
+path_model ='/Users/ponsm/Desktop/bbp00064/Koptev_Subduction/Erosion_only_subduction/10_Strong_interface_Fluvial_erosion/10_model/';
 
 %% Output options
 % 1-Output Average parameters depth
@@ -13,8 +16,6 @@ path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/contine
 % 4-Output RMS sinking velocity for different depths and Periodicity
 % 5-Output topography evolution
 
-%Crameri colors
-addpath './crameri/';
 
 % Average depth module
 % Depths should be consistent with one of the depth asked in the aspect prm file.
@@ -43,20 +44,28 @@ depths_average_for_periodicity = [5000, 15000, 25000, 35000, 45000, 55000, 65000
 averaged_parameters_for_periodicity = 'sinking_velocity';
 
 % Topography
+postprocess_topography = 'false';
 dt_topography = 5e6; %should be consistent with the prm file
 resample_topography = 1; %Take topography every x files
 
 % Dynamic topography
-% postprocess_dynamic_topography= 'true';
+postprocess_dynamic_topography = 'false';
 dt_dynamic_topography =1e6;
 resample_dynamic_topography = 10;
 
 % Heat flux
 %writing everytime step will need to be given an interval
-postprocess_heatflux= 'true';
+postprocess_heatflux= 'false';
 dt_heatflux = 1e6; %should be consistent with the prm file
 resample_heatflux = 5; %Take heatflux every x files
 
+% Layer topography
+%writing everytime step will need to be given an interval
+postprocess_topography_layer = 'true';
+dt_topography_layer = 1e6; %should be consistent with the prm file
+resample_topography_layer = 5; %Take topography layer data every x files
+model_length =1504e3;
+model_height =300e3;
 
 
 %%% Plot section
@@ -81,6 +90,7 @@ else
     end
 end
 
+try
 % Mobility with friction
 if strcmp(Output_combined_mobility_friction, 'true')
     % Get the data and corresponding statistic numbers and indices
@@ -112,9 +122,13 @@ if strcmp(Output_combined_mobility_friction, 'true')
     averaged_parameters = averaged_parameters_save;
     depths_for_average = depths_for_average_save;
 end
+catch
+    disp('No mobility statistics found.');
+end
 
 
 % Average parameter module
+try
 depth_colors = lines(length(depths_for_average));
 for k = 1:length(averaged_parameters)
     % Call the get_depth_averages function to get the average values
@@ -130,8 +144,12 @@ for k = 1:length(averaged_parameters)
     ylabel(strrep(averaged_parameters{k}, '_', ' '));
     title(sprintf('Average %s versus Time for Depths of %s m', strrep(averaged_parameters{k}, '_', ' '), num2str(depths_for_average)));
 end
+catch
+     disp('No average parameters statistics found.');
+end
 
 % Periodicity
+try
 if(time(end) > initiate_calculation_peridodicity)
     [time_avg_periodicity,param_avg_periodicity,periods, power_periods] = get_periodicity(path_model, depths_average_for_periodicity, averaged_parameters_for_periodicity,initiate_calculation_peridodicity);
 
@@ -177,8 +195,12 @@ if(time(end) > initiate_calculation_peridodicity)
 else
     %do not go throught th periodicity
 end
+catch
+    disp('No periodicity statistics found.');
+end
 
 %Topography evolution
+if strcmp(postprocess_topography, 'true')
 try
     [time_elevation, elevation, x_axis_interp] = get_topography_annulus(path_model, dt_topography, resample_topography);
     % Plot the sorted data with adjusted x axis
@@ -188,8 +210,10 @@ try
 catch
     disp('Topography files not found. Skipping topography.');
 end
+end
 
 %Dynamic topography evolution
+if strcmp(postprocess_dynamic_topography, 'true')
 try
     [time_elevation, elevation, x_axis_interp] = get_dynamic_topography_annulus(path_model, dt_dynamic_topography, resample_dynamic_topography);
     % Plot the sorted data with adjusted x axis
@@ -199,6 +223,21 @@ surf(x_axis_interp,time(1:resample_dynamic_topography:size(elevation,1)),elevati
     c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
 catch
     disp('Dynamic topography files not found. Skipping dynamic topography.');
+end
+end
+
+%Layer topography evolution
+if strcmp(postprocess_topography_layer, 'true')
+try
+[time_elevation_layer, elevation_layer, x_axis_interp_layer] = get_topography_layer(path_model, dt_topography_layer, resample_topography_layer, model_length, model_height);
+    % Plot the sorted data with adjusted x axis
+%     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
+    figure();
+ surf(x_axis_interp_layer,time_elevation_layer,elevation_layer./1e3);shading interp;c=colorbar;ylabel('Time[Ma]'),xlabel('Model Length [km]');zlabel('Elevation[km]');set(gcf,'color','w');
+     c.Label.String= "Elevations Layer [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
+ catch
+     disp('Topography layer files not found.');
+end
 end
 
 % Surface heatflux evolution
