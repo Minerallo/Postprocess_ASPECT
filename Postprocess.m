@@ -4,14 +4,19 @@ clear all; close all; clc;
 %Crameri colors
 addpath './crameri/';
 
-%%% Parameter section
-path_model = '/Path/of/the/model/folder/'
+%% Parameter section
+% % path_model = '/Path/of/the/model/folder/'
 
 % Example
 % path_model = '/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/058_f03_n1e20_UPM_cont_HK2004_umin1e20_drucker/'
 
+%% Path existence check
 % Check if path_model ends with "/"
 assert(path_model(end) == '/', 'path_model must end with "/"');
+
+if ~exist(path_model, 'dir')
+    error(['The directory ' path_model ' does not exist.']);
+end
 
 %% Output options
 % 1-Output Average parameters depth
@@ -54,6 +59,11 @@ initiate_calculation_peridodicity = 400e6; %Myr
 depths_average_for_periodicity = [5000, 15000, 25000, 35000, 45000, 55000, 65000, 75000, 85000, 95000]; %meters
 averaged_parameters_for_periodicity = 'sinking_velocity';
 
+% Topography, Dynamic topography and layer topography evolution can be plotted
+% in an interval of time in year defined by the user
+plot_topography_start = 0;
+plot_topography_end = 300e6; %to be changed by the user
+
 % Topography
 postprocess_topography = 'false';
 dt_topography = 5e6; %should be consistent with the prm file
@@ -61,14 +71,7 @@ resample_topography = 1; %Take topography every x files
 
 % Dynamic topography
 postprocess_dynamic_topography = 'true';
-dt_dynamic_topography =1e6;
-resample_dynamic_topography = 1000;
-
-% Heat flux
-%writing everytime step will need to be given an interval
-postprocess_heatflux= 'false';
-dt_heatflux = 1e6; %should be consistent with the prm file
-resample_heatflux = 5; %Take heatflux every x files
+resample_dynamic_topography = 200;
 
 % Layer topography
 %writing everytime step will need to be given an interval
@@ -88,10 +91,21 @@ read_layer_elevation_from_bottom_to_top = 'true';
 % or postprocess_topography_layer are set to true
 calculate_topography_dip = 'true';
 calculate_topography_layer_dip = 'true';
-% Interval of points at which the topography will be smooth to get rid of the noise
-% by default the topography map have a x resolution of 10000 points
-% This parameter should be ajusted by the user by checking the dip smooth figure.
+% Smoothing Interval for Topography
+% This parameter controls the spacing between points used for topography smoothing,
+% helping reduce noise. The default x-resolution is set to 10,000 points.
+% Users should adjust this parameter based on the final time step analysis
+% of the topography from the dip smoothing figures to achieve the desired smoothing effect.
 topography_smoothing_interval_for_dip_calculation = 100;
+
+
+% Heat flux
+%writing everytime step will need to be given an interval
+postprocess_heatflux= 'false';
+dt_heatflux = 1e6; %should be consistent with the prm file
+resample_heatflux = 5; %Take heatflux every x files
+
+
 
 
 %%% Plot section
@@ -228,10 +242,16 @@ end
 %Topography evolution
 if strcmp(postprocess_topography, 'true')
 try
-    [time_elevation, elevation, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
+    [time_elevation_topography, elevation_topography, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
+    
+    % Find the indices corresponding to the selected time interval
+    start_index = find(time_elevation_topography >= plot_topography_start, 1);
+    end_index = find(time_elevation_topography <= plot_topography_end, 1, 'last');
+    time_elevation_topography=time_elevation_topography(start_index:end_index);
+    elevation_topography=elevation_topography((start_index:end_index),:);    
     % Plot the sorted data with adjusted x axis
     figure();
-    surf(x_axis_interp,time_elevation,elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
+    surf(x_axis_interp,time_elevation_topography,elevation_topography./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
     c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
 catch
     disp('Topography files not found. Skipping topography.');
@@ -241,11 +261,16 @@ end
 %Dynamic topography evolution
 if strcmp(postprocess_dynamic_topography, 'true')
 try
-    [time_elevation, elevation, x_axis_interp, dip_topography] = get_dynamic_topography_annulus(path_model, dt_dynamic_topography, resample_dynamic_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
+    [time_elevation, elevation, x_axis_interp, dip_topography] = get_dynamic_topography_annulus(path_model, resample_dynamic_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation, time);
+    % Find the indices corresponding to the selected time interval
+    start_index = find(time_elevation >= plot_topography_start, 1);
+    end_index = find(time_elevation <= plot_topography_end, 1, 'last');
+    time_elevation=time_elevation(start_index:end_index);
+    elevation=elevation((start_index:end_index),:);    
     % Plot the sorted data with adjusted x axis
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
-surf(x_axis_interp,time_elevation,elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
+    surf(x_axis_interp,time_elevation,elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
     c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
 catch
     disp('Dynamic topography files not found. Skipping dynamic topography.');
@@ -256,7 +281,12 @@ end
 if strcmp(postprocess_topography_layer, 'true')
 try
 [time_elevation_layer, elevation_layer, x_axis_interp_layer, dip_layer] = get_topography_layer(path_model, dt_topography_layer, resample_topography_layer, model_length, model_height, calculate_topography_layer_dip, topography_smoothing_interval_for_dip_calculation, read_layer_elevation_from_bottom_to_top);
-    % Plot the sorted data with adjusted x axis
+    % Find the indices corresponding to the selected time interval
+    start_index = find(time_elevation_layer >= plot_topography_start, 1);
+    end_index = find(time_elevation_layer <= plot_topography_end, 1, 'last'); 
+    time_elevation_layer=time_elevation_layer(start_index:end_index);
+    elevation_layer=elevation_layer((start_index:end_index),:);
+% Plot the sorted data with adjusted x axis
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
  surf(x_axis_interp_layer,time_elevation_layer,elevation_layer./1e3);shading interp;c=colorbar;ylabel('Time[My]'),xlabel('Model Length [km]');zlabel('Elevation[km]');set(gcf,'color','w');

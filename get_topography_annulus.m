@@ -1,4 +1,4 @@
-function [time_elevation, elevation, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip,topography_smoothing_interval_for_dip_calculation)
+function [time_elevation_topography, elevation_topography, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip,topography_smoothing_interval_for_dip_calculation)
 
 % Resample the model time step using the resample_topography variable
 dt = dt_topography;
@@ -87,24 +87,24 @@ for i = 1:resample_topography:num_files
 %    For comparison with no smoothing uncomment the following lines
             z_interp(index_nan)=0;
             diptopo=atand((diff(z_interp)./1e3));
-%    The figure will plot the last profil for comparison with and without smoothing
-            figure();
-            plot(1:numel(diptopo), diptopo, 'r-', 'LineWidth', 1.4);
-            hold on;
-            plot(1:numel(dipsmooth), dipsmooth, 'b-', 'LineWidth', 1.4);
-            legend('Dip Not Smoothed','Dip Smoothed');
-            xlabel('Model length');
-            ylabel('Dip °');title('Dip Topography Comparison');legend('Location', 'Best');  
-            
     end  
 
 end
-elevation = elevation_map(:, :);
-time_elevation = 0:dt:dt * (size(elevation, 1) - 1);
+elevation_topography = elevation_map(:, :);
+time_elevation_topography = 0:dt:dt * (size(elevation, 1) - 1);
 % time_elevation=0:(dt*(num_files/resample_topography))/(num_files/resample_topography):dt*(num_files/resample_topography); %not working 
 
 if strcmp(calculate_topography_dip, 'true')
     dip_topography = dip_map(:, :);
+%    The figure will plot the last profil for comparison with and without smoothing
+    figure();
+    plot(1:numel(diptopo), diptopo, 'r-', 'LineWidth', 1.4);
+    hold on;
+    plot(1:numel(dipsmooth), dipsmooth, 'b-', 'LineWidth', 1.4);
+    legend('Dip Not Smoothed','Dip Smoothed');
+    xlabel('Model length');
+    ylabel('Dip °');title('Dip Topography Comparison');legend('Location', 'Best');  
+                
 else
     dip_topography = 0;
 end

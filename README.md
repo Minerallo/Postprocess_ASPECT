@@ -1,2 +1,2 @@
 # Postprocess_ASPECT
-A matlab package that postprocess data coming from ASPECT geodynamics code
+A matlab package that postprocess data generated from ASPECT geodynamics code

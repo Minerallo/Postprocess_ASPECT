@@ -81,15 +81,7 @@ for i = 1
             dip_map(count_ite,:)=dipsmooth;
 %    For comparison with no smoothing uncomment the following lines
             elevations2(index_nan)=0;
-            diptopo=atand((diff(elevations2)./1e3));
-%    The figure will plot the last profil for comparison with and without smoothing
-            figure();
-            plot(1:numel(diptopo), diptopo, 'r-', 'LineWidth', 1.4);
-            hold on;
-            plot(1:numel(dipsmooth), dipsmooth, 'b-', 'LineWidth', 1.4);
-            legend('Dip Not Smoothed','Dip Smoothed');
-            xlabel('Model length');
-            ylabel('Dip °');title('Dip Layer Comparison');legend('Location', 'Best');  
+            diptopo=atand((diff(elevations2)./1e3)); 
     end
 end
 elevation_layer = elevation_map(:, :);
@@ -97,6 +89,14 @@ time_elevation_layer = 0:dt:dt * (size(elevation_layer, 1) - 1);
 
 if strcmp(calculate_topography_layer_dip, 'true')
     dip_layer = dip_map(:, :);
+%    The figure will plot the last profil for comparison with and without smoothing
+    figure();
+    plot(1:numel(diptopo), diptopo, 'r-', 'LineWidth', 1.4);
+    hold on;
+    plot(1:numel(dipsmooth), dipsmooth, 'b-', 'LineWidth', 1.4);
+    legend('Dip Not Smoothed','Dip Smoothed');
+    xlabel('Model length');
+    ylabel('Dip °');title('Dip Layer Comparison');legend('Location', 'Best'); 
 else
     dip_layer = 0;
 end
