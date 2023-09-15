@@ -1,4 +1,4 @@
-function [time_elevation, elevation, x_axis_interp] = get_topography_annulus(path_model, dt_topography, resample_topography)
+function [time_elevation, elevation, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip,topography_smoothing_interval_for_dip_calculation)
 
 % Resample the model time step using the resample_topography variable
 dt = dt_topography;
@@ -21,9 +21,16 @@ x_axis_interp = 0:360/resolution_topo:360;
 
 
 % Resample topo if needed for faster computing
-
+count_ite=0;
 % elevation_map = zeros(num_files, 10000 / (resample_topography * 1e3));
 for i = 1:resample_topography:num_files
+    count_ite=count_ite+1;
+
+    % Check if the next iteration will go over num_files
+    if (i > num_files)
+        break;  % Exit the loop if the next iteration exceeds num_files
+    end
+
     fprintf('Processing topography file %d of %d\n', i, num_files)
     file_index = i;
 %     if i == 1
@@ -57,12 +64,50 @@ for i = 1:resample_topography:num_files
     
     % Interpolate the sorted z data to match the length of theta_degrees
     z_interp = interp1(theta_unique, z_sorted(index_unique), x_axis_interp);
-    elevation_map(i, :) = z_interp ;
+    elevation_map(count_ite, :) = z_interp ;
+
+    %     if dip calculation is asked
+    if strcmp(calculate_topography_dip, 'true')
+
+    % Check if the next iteration will go over num_files
+    if i > num_files
+        break;  % Exit the loop if the next iteration exceeds num_files
+    end
+
+%    find the indices of the places where there are no elevations2
+%    (depracted from topolayer might not be relevant here)
+            index_nan=find(isnan(z_interp));
+%    The topography might be noisy because of the adaptative mesh refinement 
+%    we can apply a slight smoothing to it
+            smooth_topo=smooth(z_interp,topography_smoothing_interval_for_dip_calculation)';
+%    Replace nan value by zero after smoothing (depracted from topolayer might not be relevant here)
+            smooth_topo(index_nan)=0;
+            dipsmooth=atand((diff(smooth_topo)./1e3));
+            dip_map(count_ite,:)=dipsmooth;
+%    For comparison with no smoothing uncomment the following lines
+            z_interp(index_nan)=0;
+            diptopo=atand((diff(z_interp)./1e3));
+%    The figure will plot the last profil for comparison with and without smoothing
+            figure();
+            plot(1:numel(diptopo), diptopo, 'r-', 'LineWidth', 1.4);
+            hold on;
+            plot(1:numel(dipsmooth), dipsmooth, 'b-', 'LineWidth', 1.4);
+            legend('Dip Not Smoothed','Dip Smoothed');
+            xlabel('Model length');
+            ylabel('Dip °');title('Dip Topography Comparison');legend('Location', 'Best');  
+            
+    end  
 
 end
 elevation = elevation_map(:, :);
 time_elevation = 0:dt:dt * (size(elevation, 1) - 1);
 % time_elevation=0:(dt*(num_files/resample_topography))/(num_files/resample_topography):dt*(num_files/resample_topography); %not working 
+
+if strcmp(calculate_topography_dip, 'true')
+    dip_topography = dip_map(:, :);
+else
+    dip_topography = 0;
+end
 
 end
 

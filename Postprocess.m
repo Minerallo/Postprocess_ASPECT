@@ -3,11 +3,15 @@ clear all; close all; clc;
 
 %Crameri colors
 addpath './crameri/';
+
 %%% Parameter section
-% path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/035_init_from034_discrC_umin1e21_test_temperature_alpha/';
-% '/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/mobility_function/test_heatmap/';
-% path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/036_145My_test_mob_alpha10/';
-path_model ='/Users/ponsm/Desktop/bbp00064/Koptev_Subduction/Erosion_only_subduction/10_Strong_interface_Fluvial_erosion/10_model/';
+path_model = '/Path/of/the/model/folder/'
+
+% Example
+% path_model = '/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/058_f03_n1e20_UPM_cont_HK2004_umin1e20_drucker/'
+
+% Check if path_model ends with "/"
+assert(path_model(end) == '/', 'path_model must end with "/"');
 
 %% Output options
 % 1-Output Average parameters depth
@@ -15,7 +19,13 @@ path_model ='/Users/ponsm/Desktop/bbp00064/Koptev_Subduction/Erosion_only_subduc
 % 3-Output friction angle with Mobility function
 % 4-Output RMS sinking velocity for different depths and Periodicity
 % 5-Output topography evolution
+% 6-Output layer evolution
+% 7-Output Dip topography or dip layer evolution
 
+% Model parameters 
+%Only required if topo layer is used
+model_length =8700e3; % the length is only required if the model is a box
+model_height =3000e3;
 
 % Average depth module
 % Depths should be consistent with one of the depth asked in the aspect prm file.
@@ -30,7 +40,8 @@ averaged_parameters = {'temperature','yield_stresses', 'friction_angles'};
 
 % Specify the statistic parameters to plot
 %if 'all' then output everything
-statistic_parameters = {'Mobility', 'RMS','Divergence','Radial RMS','tangential RMS', 'total RMS velocity'};
+statistic_parameters = {'RMS','temperature'};
+%     {'Mobility', 'RMS','Divergence','Radial RMS','tangential RMS', 'total RMS velocity'};
 depth_average_for_friction = 5000;
 
 % Generate a plot combining averaged parameter 'friction angles' and statistic parameters 'Mobility'
@@ -49,9 +60,9 @@ dt_topography = 5e6; %should be consistent with the prm file
 resample_topography = 1; %Take topography every x files
 
 % Dynamic topography
-postprocess_dynamic_topography = 'false';
+postprocess_dynamic_topography = 'true';
 dt_dynamic_topography =1e6;
-resample_dynamic_topography = 10;
+resample_dynamic_topography = 1000;
 
 % Heat flux
 %writing everytime step will need to be given an interval
@@ -63,9 +74,24 @@ resample_heatflux = 5; %Take heatflux every x files
 %writing everytime step will need to be given an interval
 postprocess_topography_layer = 'true';
 dt_topography_layer = 1e6; %should be consistent with the prm file
-resample_topography_layer = 5; %Take topography layer data every x files
-model_length =1504e3;
-model_height =300e3;
+resample_topography_layer = 10; %Take topography layer data every x files
+%By default layer elevation is read from top to bottom such as to track the top of a slab subduction
+%But one may want the elevation or thickness of a deeper layer such as
+%llsvps material in which case the elevation will need to be read from
+%bottom to top.
+read_layer_elevation_from_bottom_to_top = 'true'; 
+
+
+%Dip calculation
+% calculate the dip of any topography or topolayer
+% will only work if postprocess_topography or postprocess_dynamic_topography
+% or postprocess_topography_layer are set to true
+calculate_topography_dip = 'true';
+calculate_topography_layer_dip = 'true';
+% Interval of points at which the topography will be smooth to get rid of the noise
+% by default the topography map have a x resolution of 10000 points
+% This parameter should be ajusted by the user by checking the dip smooth figure.
+topography_smoothing_interval_for_dip_calculation = 100;
 
 
 %%% Plot section
@@ -78,7 +104,7 @@ time = data_stats(:, 2);
 if strcmp(statistic_parameters, 'all')
     for i=1:stats_number
         figure();
-        plot(Time,data_stats(:,i));xlabel('Time [yr]'); ylabel(header(i));title([header(i), 'versus Time']);  %Ma
+        plot(time,data_stats(:,i));xlabel('Time [yr]'); ylabel(header(i));title([header(i), 'versus Time']);  %Ma
     end
 else
     for i = 1:length(stat_indices)
@@ -202,10 +228,10 @@ end
 %Topography evolution
 if strcmp(postprocess_topography, 'true')
 try
-    [time_elevation, elevation, x_axis_interp] = get_topography_annulus(path_model, dt_topography, resample_topography);
+    [time_elevation, elevation, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
     % Plot the sorted data with adjusted x axis
     figure();
-    surf(x_axis_interp,time_elevation,elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[Ma]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
+    surf(x_axis_interp,time_elevation,elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
     c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
 catch
     disp('Topography files not found. Skipping topography.');
@@ -215,11 +241,11 @@ end
 %Dynamic topography evolution
 if strcmp(postprocess_dynamic_topography, 'true')
 try
-    [time_elevation, elevation, x_axis_interp] = get_dynamic_topography_annulus(path_model, dt_dynamic_topography, resample_dynamic_topography);
+    [time_elevation, elevation, x_axis_interp, dip_topography] = get_dynamic_topography_annulus(path_model, dt_dynamic_topography, resample_dynamic_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
     % Plot the sorted data with adjusted x axis
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
-surf(x_axis_interp,time(1:resample_dynamic_topography:size(elevation,1)),elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[Ma]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
+surf(x_axis_interp,time_elevation,elevation./1e3);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Elevation[km]');set(gcf,'color','w');
     c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
 catch
     disp('Dynamic topography files not found. Skipping dynamic topography.');
@@ -229,16 +255,63 @@ end
 %Layer topography evolution
 if strcmp(postprocess_topography_layer, 'true')
 try
-[time_elevation_layer, elevation_layer, x_axis_interp_layer] = get_topography_layer(path_model, dt_topography_layer, resample_topography_layer, model_length, model_height);
+[time_elevation_layer, elevation_layer, x_axis_interp_layer, dip_layer] = get_topography_layer(path_model, dt_topography_layer, resample_topography_layer, model_length, model_height, calculate_topography_layer_dip, topography_smoothing_interval_for_dip_calculation, read_layer_elevation_from_bottom_to_top);
     % Plot the sorted data with adjusted x axis
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
- surf(x_axis_interp_layer,time_elevation_layer,elevation_layer./1e3);shading interp;c=colorbar;ylabel('Time[Ma]'),xlabel('Model Length [km]');zlabel('Elevation[km]');set(gcf,'color','w');
+ surf(x_axis_interp_layer,time_elevation_layer,elevation_layer./1e3);shading interp;c=colorbar;ylabel('Time[My]'),xlabel('Model Length [km]');zlabel('Elevation[km]');set(gcf,'color','w');
      c.Label.String= "Elevations Layer [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
  catch
      disp('Topography layer files not found.');
 end
 end
+
+%Calculated dip of topography or layer evolution
+if strcmp(calculate_topography_dip, 'true')
+    try
+        x_axis_dip = x_axis_interp(2:end);
+        figure();
+        surf(x_axis_dip, time_elevation, dip_topography);
+        shading interp;
+        c = colorbar;
+        % Find the max value of the dip
+        max_value = max(max(abs(dip_topography)));
+        % Set color limits based on the maximum dip
+        clim([-max_value, max_value]);       
+        crameri('vik');
+        ylabel('Time[My]'), xlabel('Annulus Degrees [deg]');
+        zlabel('Dip Topography');
+        set(gcf, 'color', 'w');
+        c.Label.String = "Dip Topography";
+        view(2);
+        disp('Dip topography calculation ');
+
+    catch
+        disp('Dip topography calculation not asked or not possible.');
+    end
+elseif strcmp(calculate_layer_dip, 'true')
+    try
+        x_axis_dip = x_axis_interp(2:end);
+        figure();
+        surf(x_axis_dip, time_elevation, dip_layer);
+        shading interp;
+        c = colorbar;
+        % Find the max value of the dip
+        max_value = max(max(abs(dip_topography)));
+        % Set color limits based on the maximum dip
+        clim([-max_value, max_value]);       
+        crameri('vik');
+        ylabel('Time[My]'), xlabel('Annulus Degrees [deg]');
+        zlabel('Dip Layer');
+        set(gcf, 'color', 'w');
+        c.Label.String = "Dip Layer";
+        view(2);
+        disp('Dip layer calculation ');
+    catch
+        disp('Dip layer calculation not not asked or not possible.');
+    end
+end
+
 
 % Surface heatflux evolution
 if strcmp(postprocess_heatflux, 'true')
@@ -246,14 +319,12 @@ try
     [time_heatflux, heatfluxmap, x_axis_interp_heatflux] = get_heatflux_annulus(path_model, dt_heatflux, resample_heatflux);
     % Plot the sorted data with adjusted x axis
     figure();
-    surf(x_axis_interp_heatflux,time(1:resample_heatflux:size(elevation,1)),heatfluxmap.*1e3);shading interp;c = colorbar;crameri('lajolla',12);ylabel('Time[Ma]'),xlabel('Annulus Degrees [deg]');zlabel('Surface heat flux[W]');caxis([0 120]);set(gcf,'color','w');
+    surf(x_axis_interp_heatflux,time(1:time_heatflux:size(elevation,1)),heatfluxmap.*1e3);shading interp;c = colorbar;crameri('lajolla',12);ylabel('Time[My]'),xlabel('Annulus Degrees [deg]');zlabel('Surface heat flux[W]');caxis([0 120]);set(gcf,'color','w');
     c.Label.String= "Surface heat flux [mW/m]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
 catch
     disp('Heatflux files not found. Skipping heatflux.');
 end
 end
-
-
 
 
 

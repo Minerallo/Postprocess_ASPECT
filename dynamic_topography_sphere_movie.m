@@ -1,7 +1,9 @@
 clc ; close all; clear all;
 % path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/sphere3d/3D_ascii/013_012_initglobal_restart/';
 % path_model ='/Users/ponsm/Desktop/bbk00014/globalscale/sphere/019_013_init_continents_density_continents_only_maxtinestp_faster/'
-path_model ='/Users/ponsm/Desktop/bbk00014/globalscale/sphere/021c_013_cont_only_plate/'
+% path_model ='/Users/ponsm/Desktop/bbk00014/globalscale/sphere/021c_013_cont_only_plate/'
+% path_model ='/Users/ponsm/Desktop/bbk00014/globalscale/sphere/023_test_vel_and_restart/';
+path_model ='/Users/ponsm/Desktop/modelblogin/model/globalscale/sphere3d/030_geometric_gplate_fast_1e21_kinematic';
 make_video='false';
 resample_dynamic_topography = 5;
 
