@@ -5,7 +5,7 @@ clear all; close all; clc;
 addpath './crameri/';
 
 %% Parameter section
-% % path_model = '/Path/of/the/model/folder/'
+path_model = '/Path/of/the/model/folder/'
 
 % Example
 % path_model = '/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/continents/058_f03_n1e20_UPM_cont_HK2004_umin1e20_drucker/'
@@ -71,13 +71,13 @@ resample_topography = 1; %Take topography every x files
 
 % Dynamic topography
 postprocess_dynamic_topography = 'true';
-resample_dynamic_topography = 200;
+resample_dynamic_topography = 500;
 
 % Layer topography
 %writing everytime step will need to be given an interval
 postprocess_topography_layer = 'true';
 dt_topography_layer = 1e6; %should be consistent with the prm file
-resample_topography_layer = 10; %Take topography layer data every x files
+resample_topography_layer = 4; %Take topography layer data every x files
 %By default layer elevation is read from top to bottom such as to track the top of a slab subduction
 %But one may want the elevation or thickness of a deeper layer such as
 %llsvps material in which case the elevation will need to be read from
@@ -97,7 +97,6 @@ calculate_topography_layer_dip = 'true';
 % Users should adjust this parameter based on the final time step analysis
 % of the topography from the dip smoothing figures to achieve the desired smoothing effect.
 topography_smoothing_interval_for_dip_calculation = 100;
-
 
 % Heat flux
 %writing everytime step will need to be given an interval
@@ -290,7 +289,7 @@ try
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
  surf(x_axis_interp_layer,time_elevation_layer,elevation_layer./1e3);shading interp;c=colorbar;ylabel('Time[My]'),xlabel('Model Length [km]');zlabel('Elevation[km]');set(gcf,'color','w');
-     c.Label.String= "Elevations Layer [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
+     c.Label.String= "Elevations Layer [km]";crameri('nuuk');set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
  catch
      disp('Topography layer files not found.');
 end
@@ -299,6 +298,7 @@ end
 %Calculated dip of topography or layer evolution
 if strcmp(calculate_topography_dip, 'true')
     try
+%       Plot the dip over time 
         x_axis_dip = x_axis_interp(2:end);
         figure();
         surf(x_axis_dip, time_elevation, dip_topography);
@@ -314,16 +314,19 @@ if strcmp(calculate_topography_dip, 'true')
         set(gcf, 'color', 'w');
         c.Label.String = "Dip Topography";
         view(2);
+
+
         disp('Dip topography calculation ');
 
     catch
         disp('Dip topography calculation not asked or not possible.');
     end
-elseif strcmp(calculate_layer_dip, 'true')
+elseif strcmp(calculate_topography_layer_dip, 'true')
     try
-        x_axis_dip = x_axis_interp(2:end);
+%       Plot the dip over time
+        x_axis_dip_layer = x_axis_interp_layer(2:end);
         figure();
-        surf(x_axis_dip, time_elevation, dip_layer);
+        surf(x_axis_dip_layer, time_elevation_layer, dip_layer);
         shading interp;
         c = colorbar;
         % Find the max value of the dip
@@ -336,6 +339,136 @@ elseif strcmp(calculate_layer_dip, 'true')
         set(gcf, 'color', 'w');
         c.Label.String = "Dip Layer";
         view(2);
+
+        try
+%       Plot the dip evolution over time as a mean and standart deviation 
+% Calculate the mean and standard deviation of dip values over time
+
+
+%         Only produce statistic of slope when significant change of slope occurs
+%         the user can set a slope_gradient_threshold (e.g 0.1 equivalent to 10prct),
+%         the statistic will be produced for slope having a gradient higher than this number
+        % Define the slope gradient threshold
+        slope_gradient_threshold = 0.02;
+        minimum_slope_threshold = 10;
+
+%         filter with slope
+        slope_filter = abs(dip_layer)>minimum_slope_threshold;
+        % Calculate the absolute gradient of dip_layer
+        gradient_filter = abs(gradient(dip_layer))>slope_gradient_threshold;
+
+        
+        % Create a figure showing the slope areas used for the plot
+        figure();
+        pcolor(slope_filter.*gradient_filter);
+        shading flat;
+        colorbar;
+        clim([-0.5, 0.5]);
+        
+        % Add labels and a title
+        xlabel('Model length [km]');
+        ylabel('Time elevation [yr]');
+        title('Slope Areas Used for Plot');
+        
+        % Set the figure background color to white
+        set(gcf, 'color', 'w');
+        
+        % Optionally, you can add grid lines
+        grid on;
+ 
+
+        dip_layer_tracked = slope_filter.*gradient_filter;
+        dip_layer_with_gradient_threshold = dip_layer.*dip_layer_tracked;
+        dip_layer_with_gradient_threshold(dip_layer_with_gradient_threshold == 0) = NaN;
+        
+%         Create an histogram of the dip values taken into account the filters
+%         figure();
+%         % Specify the number of bins for the histogram
+%         num_bins = 20;
+%         
+%         % Create a histogram
+%         histogram(abs(dip_layer_with_gradient_threshold), num_bins);
+%         
+%         % Add labels and a title
+%         xlabel('Dip Layer Values');
+%         ylabel('Frequency');
+%         title('Histogram of Dip Layer Values');
+
+
+        mean_dip = nanmean(abs(dip_layer_with_gradient_threshold), 2);
+        std_dip = nanstd(abs(dip_layer_with_gradient_threshold), 0, 2);
+        non_nan_values = sum(~isnan(dip_layer_with_gradient_threshold), 2);
+
+
+        % Your mean and std_dip vectors
+        y = mean_dip'; % Replace with your mean dip values
+        std_dev = std_dip'; % Replace with your std dip values
+        
+        
+%         % Calculate upper and lower curves for shading without confidency interval
+%         curve1 = y + std_dev;
+%         curve2 = y - std_dev;
+
+        % Calculate upper and lower curves with confidency interval
+        
+        for i = 1:numel(non_nan_values)
+            SEM = std_dev(i) / sqrt(non_nan_values(i)); % Standard Error
+            
+            % Calculate ts (T-Score) for the current non_nan_values
+%             confidence interval is set at 70%
+            ts = tinv([0.15 0.85], non_nan_values(i) - 1);
+            
+            % Calculate Confidence Intervals using ts
+            curve1(i) = y(i) + ts(2) * SEM; % Upper bound of Confidence Interval
+            curve2(i) = y(i) + ts(1) * SEM; % Lower bound of Confidence Interval
+        end
+
+        % Create x2 and inBetween vectors for shading
+        x2 = [time_elevation_layer, fliplr(time_elevation_layer)];
+        inBetween = [curve1, fliplr(curve2)];
+        
+        figure();
+        % Plot the shaded area
+        fill(x2, inBetween, 'b', 'FaceAlpha', 0.3); % Adjust color and transparency as needed
+        
+        hold on;
+        
+        % Plot the mean dip values
+        plot(time_elevation_layer, mean_dip, 'r-', 'LineWidth', 2); % Adjust color and line style as needed
+        
+        xlabel('Time');
+        ylabel('Mean Dip °');
+        title('Mean Dip with Standard Deviation in Shaded Area');
+        legend('Standard Deviation', 'Mean Dip', 'Location', 'Best');
+        set(gcf, 'color', 'w');
+        grid on;
+
+
+        % Create x2 and inBetween vectors for shading
+        x2 = [time_elevation_layer, fliplr(time_elevation_layer)];
+        inBetween = [curve1, fliplr(curve2)];
+        
+        figure();
+        % Plot the shaded area
+        fill(x2, inBetween, 'b', 'FaceAlpha', 0.3); % Adjust color and transparency as needed
+        
+        hold on;
+        
+        % Plot the mean dip values
+        plot(time_elevation_layer, mean_dip, 'r-', 'LineWidth', 2); % Adjust color and line style as needed
+        
+        xlabel('Time');
+        ylabel('Mean Dip °');
+        title('Mean Dip with Standard Deviation Shaded Area');
+        legend('Standard Deviation', 'Mean Dip', 'Location', 'Best');
+        set(gcf, 'color', 'w');
+        grid on;
+
+
+            disp('Dip mean and standart deviation calculation')
+        catch
+            disp('Dip average calculation not possible.');
+        end
         disp('Dip layer calculation ');
     catch
         disp('Dip layer calculation not not asked or not possible.');

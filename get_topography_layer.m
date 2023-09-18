@@ -28,8 +28,7 @@ x_axis_interp_layer = 0:1e3:model_length;
 % Resample topo if needed for faster computing
 count_ite=0;
 % elevation_map = zeros(num_files, 10000 / (resample_topography_layer * 1e3));
-for i = 1
-%     :resample_topography_layer:num_files
+for i = 1:resample_topography_layer:num_files
     count_ite=count_ite+1;
 
     % Check if the next iteration will go over num_files
