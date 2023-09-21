@@ -89,7 +89,7 @@ read_layer_elevation_from_bottom_to_top = 'true';
 % calculate the dip of any topography or topolayer
 % will only work if postprocess_topography or postprocess_dynamic_topography
 % or postprocess_topography_layer are set to true
-calculate_topography_dip = 'true';
+calculate_topography_dip = 'false';
 calculate_topography_layer_dip = 'true';
 % Smoothing Interval for Topography
 % This parameter controls the spacing between points used for topography smoothing,
@@ -330,7 +330,7 @@ elseif strcmp(calculate_topography_layer_dip, 'true')
         shading interp;
         c = colorbar;
         % Find the max value of the dip
-        max_value = max(max(abs(dip_topography)));
+        max_value = max(max(abs(dip_layer)));
         % Set color limits based on the maximum dip
         clim([-max_value, max_value]);       
         crameri('vik');
@@ -339,20 +339,22 @@ elseif strcmp(calculate_topography_layer_dip, 'true')
         set(gcf, 'color', 'w');
         c.Label.String = "Dip Layer";
         view(2);
-
-        try
+        disp('Dip layer calculation ');
+    catch
+        disp('Dip layer calculation not not asked or not possible.');
+    end
+    try
 %       Plot the dip evolution over time as a mean and standart deviation 
-% Calculate the mean and standard deviation of dip values over time
+%       Calculate the mean and standard deviation of dip values over time
 
-
-%         Only produce statistic of slope when significant change of slope occurs
-%         the user can set a slope_gradient_threshold (e.g 0.1 equivalent to 10prct),
-%         the statistic will be produced for slope having a gradient higher than this number
+%        Only produce statistic of slope when significant change of slope occurs
+%        the user can set a slope_gradient_threshold (e.g 0.1 equivalent to 10prct),
+%        the statistic will be produced for slope having a gradient higher than this number
         % Define the slope gradient threshold
         slope_gradient_threshold = 0.02;
         minimum_slope_threshold = 10;
 
-%         filter with slope
+%       filter with slope
         slope_filter = abs(dip_layer)>minimum_slope_threshold;
         % Calculate the absolute gradient of dip_layer
         gradient_filter = abs(gradient(dip_layer))>slope_gradient_threshold;
@@ -442,38 +444,12 @@ elseif strcmp(calculate_topography_layer_dip, 'true')
         legend('Standard Deviation', 'Mean Dip', 'Location', 'Best');
         set(gcf, 'color', 'w');
         grid on;
-
-
-        % Create x2 and inBetween vectors for shading
-        x2 = [time_elevation_layer, fliplr(time_elevation_layer)];
-        inBetween = [curve1, fliplr(curve2)];
-        
-        figure();
-        % Plot the shaded area
-        fill(x2, inBetween, 'b', 'FaceAlpha', 0.3); % Adjust color and transparency as needed
-        
-        hold on;
-        
-        % Plot the mean dip values
-        plot(time_elevation_layer, mean_dip, 'r-', 'LineWidth', 2); % Adjust color and line style as needed
-        
-        xlabel('Time');
-        ylabel('Mean Dip °');
-        title('Mean Dip with Standard Deviation Shaded Area');
-        legend('Standard Deviation', 'Mean Dip', 'Location', 'Best');
-        set(gcf, 'color', 'w');
-        grid on;
-
-
             disp('Dip mean and standart deviation calculation')
         catch
-            disp('Dip average calculation not possible.');
-        end
-        disp('Dip layer calculation ');
-    catch
-        disp('Dip layer calculation not not asked or not possible.');
+            disp('Dip mean and standart deviation calculation not possible.');
     end
 end
+
 
 
 % Surface heatflux evolution
