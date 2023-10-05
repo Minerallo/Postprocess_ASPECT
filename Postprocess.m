@@ -265,7 +265,8 @@ try
     start_index = find(time_elevation >= plot_topography_start, 1);
     end_index = find(time_elevation <= plot_topography_end, 1, 'last');
     time_elevation=time_elevation(start_index:end_index);
-    elevation=elevation((start_index:end_index),:);    
+    elevation=elevation((start_index:end_index),:);   
+    dip_topography=dip_topography((start_index:end_index),:);
     % Plot the sorted data with adjusted x axis
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
@@ -285,6 +286,7 @@ try
     end_index = find(time_elevation_layer <= plot_topography_end, 1, 'last'); 
     time_elevation_layer=time_elevation_layer(start_index:end_index);
     elevation_layer=elevation_layer((start_index:end_index),:);
+    dip_layer=dip_layer((start_index:end_index),:);
 % Plot the sorted data with adjusted x axis
 %     For now let's use the time from statistic but this will have to be change for a resampling time, time_elevation is obsolete.
     figure();
@@ -362,14 +364,14 @@ elseif strcmp(calculate_topography_layer_dip, 'true')
         
         % Create a figure showing the slope areas used for the plot
         figure();
-        pcolor(slope_filter.*gradient_filter);
+        surf(x_axis_dip_layer, time_elevation_layer,slope_filter.*gradient_filter);
         shading flat;
         colorbar;
-        clim([-0.5, 0.5]);
-        
+        clim([0, 1]);
+        view(2);
         % Add labels and a title
         xlabel('Model length [km]');
-        ylabel('Time elevation [yr]');
+        ylabel('Time [yr]');
         title('Slope Areas Used for Plot');
         
         % Set the figure background color to white
@@ -413,6 +415,8 @@ elseif strcmp(calculate_topography_layer_dip, 'true')
 
         % Calculate upper and lower curves with confidency interval
         
+%         In case of no dip detetected replace nan values by 0
+        non_nan_values(isnan(non_nan_values))=0;
         for i = 1:numel(non_nan_values)
             SEM = std_dev(i) / sqrt(non_nan_values(i)); % Standard Error
             
