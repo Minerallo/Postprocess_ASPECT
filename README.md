@@ -21,5 +21,5 @@ Version 1.2 introduces a new set of postprocesses known as "geofeatures." These,
 
 - The models now create a Robinson projection of the data extracted from Paraview.
 - Data extraction from Paraview is facilitated using `Global_extract_series.py`.
-- There's an added focus on quantifying the distribution of the age of the oceanic seafloor relative to its surface area (as in Colice, 2012).
+- There's an added focus on quantifying the distribution of the age of the oceanic seafloor relative to its surface area (as in Coltice, 2012).
 - The postprocess can now calculate the Feret diameter of subduction zones and the VRMS of continents.
