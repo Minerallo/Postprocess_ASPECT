@@ -17,7 +17,7 @@ Thank you!
 
 ### January 30, 2024 - Postprocess_ASPECTv1.2
 
-Version 1.2 introduces a new set of postprocesses known as "geofeatures." These, in combination with a Paraview Python script, enable tracking and quantification of subduction zones, associated subduction zones, and plumes. Additionally:
+Version 1.2 introduces a new set of postprocesses known as "geofeatures." These, in combination with a Paraview Python script, enable tracking and quantification of subduction zones, connected subduction zones, and plumes. Additionally:
 
 - The models now create a Robinson projection of the data extracted from Paraview.
 - Data extraction from Paraview is facilitated using `Global_extract_series.py`.
