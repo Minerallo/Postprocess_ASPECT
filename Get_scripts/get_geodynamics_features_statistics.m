@@ -769,7 +769,7 @@ for i = start_step:max_num_files
                     gridm;
                     plumes_position3 = ind2rgb(plumes_positions2 + 1, CMap_plume);
                     geoshow(Yeq, Xeq, plumes_position3);
-                    setm(ax1, 'MapProjection', 'robinson')
+                    setm(ax1, 'MapProjection', 'robinson');
                     freezeColors(ax1);
                     hold on;
                     if (subduction_depths_tracking(tt)==0)
@@ -786,10 +786,10 @@ for i = start_step:max_num_files
                     geoshow(Yeq, Xeq, boundaries_position3,'FaceAlpha',0.4);
                     %                     end
                     cmatrix_plume = contourm(Yeq,Xeq, non_adiabT_depths{matching_depths_plumes_indices}, [plumes_non_adiabatic_tracking_temperature(tt) plumes_non_adiabatic_tracking_temperature(tt)], 'r','LineWidth',2);
-%                     plume_str = sprintf('Plumes: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km)', numPlumes(dtracking), plumes_depths_tracking(dtracking)), 1:numel(numPlumes), 'UniformOutput', false), ' '));
+                    %                     plume_str = sprintf('Plumes: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km)', numPlumes(dtracking), plumes_depths_tracking(dtracking)), 1:numel(numPlumes), 'UniformOutput', false), ' '));
                     plume_str = sprintf('Plumes: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km, %dK)', numPlumes(dtracking), plumes_depths_tracking(dtracking), plumes_non_adiabatic_tracking_temperature(dtracking)), 1:numel(numPlumes), 'UniformOutput', false), ' '));
                     subduction_str = sprintf('Subductions: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km, %dK)', numSubductions(dtracking), subduction_depths_tracking(dtracking), subduction_non_adiabatic_tracking_temperature(dtracking)), 1:numel(numSubductions), 'UniformOutput', false), ' '));
-%                     subduction_str = sprintf('Subductions: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km)', numSubductions(dtracking), subduction_depths_tracking(dtracking)), 1:numel(numSubductions), 'UniformOutput', false), ' '));
+                    %                     subduction_str = sprintf('Subductions: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km)', numSubductions(dtracking), subduction_depths_tracking(dtracking)), 1:numel(numSubductions), 'UniformOutput', false), ' '));
                     current_depth_str = sprintf('Current depth = %d km', current_depth_subductions(tt));
                     title_str = [{time_str} current_depth_str plume_str subduction_str];
                     title(title_str);
@@ -855,7 +855,7 @@ for i = start_step:max_num_files
                                 if ~isempty(str2num(additional_fields_depths_to_visualize{jj,ii}))
                                     if ~isempty(additional_fields_threshold{jj,ii})
                                         if contains(additional_fields_threshold{jj,ii}, '<')
-                                            disp('test2')
+%                                             disp('test2')
                                             % Check if the string is not empty
                                             current_map_thlds = non_empty_maps{tt}{jj,ii} < str2double(extractAfter(additional_fields_threshold{jj,ii}, '<'));
                                             thld_fields = str2double(extractAfter(additional_fields_threshold{jj,ii}, '<'));
@@ -873,7 +873,7 @@ for i = start_step:max_num_files
                                         current_map_used = current_map_position3;
 
                                     else
-                                        disp('test3')
+%                                         disp('test3')
                                         thld_fields = default_threshold_fields; %give a default value for contourm function
                                         current_map_field = non_empty_maps{tt}{jj,ii};
                                         index_cmap = 4;
@@ -889,7 +889,7 @@ for i = start_step:max_num_files
                                     gridm;
 
                                     ax1 = gca;
-                                    setm(ax1, 'MapProjection', 'robinson')
+                                    setm(ax1, 'MapProjection', 'robinson');
                                     zlabel(additional_fields_to_load{ii});
 
                                     if index_cmap ==4
@@ -970,218 +970,218 @@ for i = start_step:max_num_files
                 end
             end
         end
-    end
-   
 
-%         if ~strcmp(additional_fields_to_load{1}, '')
-%             non_empty_maps = {surface_additional_fields, lithosphere_additional_fields, depths_additional_fields};
-%             non_empty_indices = ~cellfun('isempty', non_empty_maps);
-% 
-%             if any(non_empty_indices)
-%                 % Iterate over the non-empty maps and make plots
-%                 for tt = 1:numel(non_empty_maps)
-%                     if non_empty_indices(tt)
-%                         for ii=1:numel(additional_fields_to_load)
-%                             if (size(non_empty_maps{tt},1)==1)
-%                                 jj=1;
-%                                 if ~isempty(additional_fields_threshold{1})
-%                                     if contains(additional_fields_threshold{1}, '<')
-%                                         % Check if the string is not empty
-%                                         current_map_thlds = non_empty_maps{tt}{ii} < str2double(extractAfter(additional_fields_threshold{1}, '<'));
-%                                         thld_fields = str2double(extractAfter(additional_fields_threshold{1}, '<'));
-%                                     else
-%                                         % Check if the string is not empty
-%                                         current_map_thlds = non_empty_maps{tt}{ii} > str2double(extractAfter(additional_fields_threshold{1}, '>'));
-%                                         thld_fields = str2double(extractAfter(additional_fields_threshold{1}, '>'));
-%                                     end
-%                                     if isnan(thld_fields)
-%                                         thld_fields = default_threshold_fields;
-%                                     end
-%                                     current_map_position2=1-current_map_thlds;
-%                                     %                                     figure();pcolor(current_map_position3);shading flat;
-% 
-%                                     %                                 1-current_map;
-%                                     current_map_position3 = ind2rgb(current_map_position2 + 1, CMap_additional_fields);
-%                                     index_cmap = 1;
-%                                     current_map_used = current_map_position3;
-% 
-%                                 else
-%                                     thld_fields = default_threshold_fields; %give a default value for contourm function
-%                                     current_map = non_empty_maps{tt}{ii};
-%                                     index_cmap = 2;
-%                                     current_map_used = current_map;
-%                                 end
-%                                 %                                 current_map_used = current_map_position3;
-%                                 %                                 ~isempty(additional_fields_threshold{1}) * current_map_field + isempty(additional_fields_threshold{1}) * current_map_position3;
-%                                 h=figure;set(h, 'Visible', 'off');
-%                                 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
-%                                 set(gcf, 'color', 'w');
-%                                 view(0, 90);
-%                                 axesm mercator
-%                                 framem;
-%                                 gridm;
-% 
-%                                 ax1 = gca;
-%                                 setm(ax1, 'MapProjection', 'robinson')
-%                                 zlabel(additional_fields_to_load{ii});
-%                                 if index_cmap ==2
-%                                     title_str = sprintf('%s (%d km)', additional_fields_to_load{ii},unique_depths(1)./1e3);
-%                                     title({title_str, time_str});
-%                                     cmap1=crameri('lajolla');
-%                                     c1 = colorbar();%ax1,'Position',[0.91 0.18 0.02 0.66]
-%                                     clim([min(min(current_map_used)) max(max(current_map_used))]);
-%                                     %                                     clim([0 1]);
-%                                     set(ax1,'ColorScale');
-%                                     c1.Label.String = additional_fields_to_load{ii};
-%                                     c1.Label.FontSize = 14;
-%                                     colormap(ax1,cmap1);
-%                                     geoshow(Yeq, Xeq, current_map_used,'DisplayType', 'surface');
-% 
-%                                 else
-%                                     title_str = sprintf('%s (%s at %d km)', additional_fields_to_load{ii},num2str(thld_fields,'%.2f'),unique_depths(1)./1e3);
-%                                     title({title_str, time_str});
-%                                     geoshow(Yeq, Xeq, current_map_used,'FaceAlpha',0.4);
-%                                 end
-% 
-%                                 freezeColors(ax1);
-%                                 hold on;
-% %                                 cmatrix_fields = contourm(Yeq, Xeq, non_empty_maps{tt}{ii}, [thld_fields thld_fields], 'r', 'LineWidth', 2);
-%                                 cmatrix_fields = contourm(Yeq, Xeq, non_empty_maps{tt}{ii},thld_fields, 'r', 'LineWidth', 2);
-% 
-%                                 contourm(Yeq,Xeq, contour_continents_init, 0.3, 'k','LineWidth',2);
-%                                 %             contourm(Yeq,Xeq, continents_init, 0.3, 'k','LineWidth',2);
-%                                 ax2 = gca;
-%                                 setm(ax2, 'MapProjection', 'robinson')
-%                                 geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
-%                                 colormap(ax2);
-% 
-%                                 if strcmp(plot_continents_border_from_reconstruction,'true')
-% 
-%                                     ax3 = gca;
-%                                     setm(ax3, 'MapProjection', 'robinson')
-%                                     %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
-%                                     geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
-% 
-%                                     ax3.SortMethod = 'childorder';
-%                                 end
-% 
-%                                 ax2.SortMethod = 'childorder';
-% 
-%                                 % Create the full path for the repository
-%                                 geofeatures_output = fullfile(path_model_output, 'additional_field_maps');
-% 
-%                                 % Check if the repository already exists
-%                                 if exist(geofeatures_output, 'dir') ~= 7
-%                                     % Create the repository if it doesn't exist
-%                                     mkdir(geofeatures_output);
-%                                     fprintf('Repository Maps_additional_fields created successfully.');
-%                                 end
-% 
-%                                 %                                 Save the figure in the repository
-%                                 fig_filename = fullfile(geofeatures_output, sprintf('%s_depth_%04d_%04d_threshold_%s_.png',additional_fields_to_load{ii},unique_depths(jj), i,num2str(thld_fields,'%.2f')));
-%                                 saveas(gcf, fig_filename);
-%                                 fprintf('Figure saved: %s\n', fig_filename);
-%                             else
-%                                 for jj = 1:size(non_empty_maps{tt},1)
-%                                     if ~isempty(additional_fields_threshold{tt})
-%                                         if contains(additional_fields_threshold{tt}, '<')
-%                                             disp('test22')
-%                                             % Check if the string is not empty
-%                                             current_map_thlds = non_empty_maps{tt}{jj,ii} < str2double(extractAfter(additional_fields_threshold{jj}, '<'));
-%                                             thld_fields = str2double(extractAfter(additional_fields_threshold{jj}, '<'));
-%                                         else
-%                                             % Check if the string is not empty
-%                                             current_map_thlds = non_empty_maps{tt}{jj,ii} > str2double(extractAfter(additional_fields_threshold{jj}, '>'));
-%                                             thld_fields = str2double(extractAfter(additional_fields_threshold{jj}, '>'));
-%                                         end
-%                                         if isnan(thld_fields)
-%                                             thld_fields = default_threshold_fields;
-%                                         end
-%                                         current_map_position2=1-current_map_thlds;
-%                                         current_map_position3 = ind2rgb(current_map_position2 + 1, CMap_additional_fields);
-%                                         index_cmap = 3;
-%                                         current_map_used = current_map_position3;
-% 
-%                                     else
-%                                         disp('test22')
-%                                         thld_fields = default_threshold_fields; %give a default value for contourm function
-%                                         current_map_field = non_empty_maps{tt}{jj,ii};
-%                                         index_cmap = 4;
-%                                         current_map_used = current_map_field;
-%                                     end
-% 
-%                                     h=figure;set(h, 'Visible', 'off');
-%                                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
-%                                     set(gcf, 'color', 'w');
-%                                     view(0, 90);
-%                                     axesm mercator
-%                                     framem;
-%                                     gridm;
-% 
-%                                     ax1 = gca;
-%                                     setm(ax1, 'MapProjection', 'robinson')
-%                                     zlabel(additional_fields_to_load{ii});
-% 
-%                                     if index_cmap ==4
-%                                         title_str = sprintf('%s (%d km)', additional_fields_to_load{ii},unique_depths(1)./1e3);
-%                                         title({title_str, time_str});
-%                                         cmap1=crameri('lajolla');
-%                                         c1 = colorbar();%ax1,'Position',[0.91 0.18 0.02 0.66]
-%                                         clim([min(min(current_map_used)) max(max(current_map_used))]);
-%                                         %                                     clim([0 1]);
-%                                         set(ax1,'ColorScale');
-%                                         c1.Label.String = additional_fields_to_load{ii};
-%                                         c1.Label.FontSize = 14;
-%                                         colormap(ax1,cmap1);
-%                                         geoshow(Yeq, Xeq, current_map_used,'DisplayType', 'surface');
-%                                     elseif index_cmap ==3
-%                                         title_str = sprintf('%s (%s at %d km)', additional_fields_to_load{ii},num2str(thld_fields,'%.2f'),unique_depths(jj)./1e3);
-%                                         title({title_str, time_str});
-%                                         geoshow(Yeq, Xeq, current_map_used,'FaceAlpha',0.4);
-%                                     end
-%                                     freezeColors(ax1);
-%                                     hold on;
-%                                     cmatrix_fields = contourm(Yeq, Xeq, non_empty_maps{tt}{jj,ii}, [thld_fields thld_fields], 'r', 'LineWidth', 2);
-%                                     contourm(Yeq,Xeq, contour_continents_init, 0.3, 'k','LineWidth',2);
-%                                     %             contourm(Yeq,Xeq, continents_init, 0.3, 'k','LineWidth',2);
-%                                     ax2 = gca;
-%                                     setm(ax2, 'MapProjection', 'robinson')
-%                                     geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
-%                                     colormap(ax2);
-% 
-%                                     if strcmp(plot_continents_border_from_reconstruction,'true')
-%                                         ax3 = gca;
-%                                         setm(ax3, 'MapProjection', 'robinson')
-%                                         %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
-%                                         geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
-% 
-%                                         ax3.SortMethod = 'childorder';
-%                                     end
-% 
-%                                     ax2.SortMethod = 'childorder';
-% 
-%                                     % Create the full path for the repository
-%                                     geofeatures_output = fullfile(path_model_output, 'additional_field_maps');
-% 
-%                                     % Check if the repository already exists
-%                                     if exist(geofeatures_output, 'dir') ~= 7
-%                                         % Create the repository if it doesn't exist
-%                                         mkdir(geofeatures_output);
-%                                         fprintf('Repository Maps_additional_fields created successfully.');
-%                                     end
-% 
-%                                     %                                 Save the figure in the repository
-%                                     fig_filename = fullfile(geofeatures_output, sprintf('%s_depth_%04d_%04d_threshold_%s_.png',additional_fields_to_load{ii},unique_depths(jj), i,num2str(thld_fields,'%.2f')));
-%                                     saveas(gcf, fig_filename);
-%                                     fprintf('Figure saved: %s\n', fig_filename);
-% 
-%                                 end
-%                             end
-%                         end
-%                     end
-%                 end
-%             end
-%         end
+
+        %%To remove once the code above works fine
+        %         if ~strcmp(additional_fields_to_load{1}, '')
+        %             non_empty_maps = {surface_additional_fields, lithosphere_additional_fields, depths_additional_fields};
+        %             non_empty_indices = ~cellfun('isempty', non_empty_maps);
+        %
+        %             if any(non_empty_indices)
+        %                 % Iterate over the non-empty maps and make plots
+        %                 for tt = 1:numel(non_empty_maps)
+        %                     if non_empty_indices(tt)
+        %                         for ii=1:numel(additional_fields_to_load)
+        %                             if (size(non_empty_maps{tt},1)==1)
+        %                                 jj=1;
+        %                                 if ~isempty(additional_fields_threshold{1})
+        %                                     if contains(additional_fields_threshold{1}, '<')
+        %                                         % Check if the string is not empty
+        %                                         current_map_thlds = non_empty_maps{tt}{ii} < str2double(extractAfter(additional_fields_threshold{1}, '<'));
+        %                                         thld_fields = str2double(extractAfter(additional_fields_threshold{1}, '<'));
+        %                                     else
+        %                                         % Check if the string is not empty
+        %                                         current_map_thlds = non_empty_maps{tt}{ii} > str2double(extractAfter(additional_fields_threshold{1}, '>'));
+        %                                         thld_fields = str2double(extractAfter(additional_fields_threshold{1}, '>'));
+        %                                     end
+        %                                     if isnan(thld_fields)
+        %                                         thld_fields = default_threshold_fields;
+        %                                     end
+        %                                     current_map_position2=1-current_map_thlds;
+        %                                     %                                     figure();pcolor(current_map_position3);shading flat;
+        %
+        %                                     %                                 1-current_map;
+        %                                     current_map_position3 = ind2rgb(current_map_position2 + 1, CMap_additional_fields);
+        %                                     index_cmap = 1;
+        %                                     current_map_used = current_map_position3;
+        %
+        %                                 else
+        %                                     thld_fields = default_threshold_fields; %give a default value for contourm function
+        %                                     current_map = non_empty_maps{tt}{ii};
+        %                                     index_cmap = 2;
+        %                                     current_map_used = current_map;
+        %                                 end
+        %                                 %                                 current_map_used = current_map_position3;
+        %                                 %                                 ~isempty(additional_fields_threshold{1}) * current_map_field + isempty(additional_fields_threshold{1}) * current_map_position3;
+        %                                 h=figure;set(h, 'Visible', 'off');
+        %                                 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
+        %                                 set(gcf, 'color', 'w');
+        %                                 view(0, 90);
+        %                                 axesm mercator
+        %                                 framem;
+        %                                 gridm;
+        %
+        %                                 ax1 = gca;
+        %                                 setm(ax1, 'MapProjection', 'robinson')
+        %                                 zlabel(additional_fields_to_load{ii});
+        %                                 if index_cmap ==2
+        %                                     title_str = sprintf('%s (%d km)', additional_fields_to_load{ii},unique_depths(1)./1e3);
+        %                                     title({title_str, time_str});
+        %                                     cmap1=crameri('lajolla');
+        %                                     c1 = colorbar();%ax1,'Position',[0.91 0.18 0.02 0.66]
+        %                                     clim([min(min(current_map_used)) max(max(current_map_used))]);
+        %                                     %                                     clim([0 1]);
+        %                                     set(ax1,'ColorScale');
+        %                                     c1.Label.String = additional_fields_to_load{ii};
+        %                                     c1.Label.FontSize = 14;
+        %                                     colormap(ax1,cmap1);
+        %                                     geoshow(Yeq, Xeq, current_map_used,'DisplayType', 'surface');
+        %
+        %                                 else
+        %                                     title_str = sprintf('%s (%s at %d km)', additional_fields_to_load{ii},num2str(thld_fields,'%.2f'),unique_depths(1)./1e3);
+        %                                     title({title_str, time_str});
+        %                                     geoshow(Yeq, Xeq, current_map_used,'FaceAlpha',0.4);
+        %                                 end
+        %
+        %                                 freezeColors(ax1);
+        %                                 hold on;
+        % %                                 cmatrix_fields = contourm(Yeq, Xeq, non_empty_maps{tt}{ii}, [thld_fields thld_fields], 'r', 'LineWidth', 2);
+        %                                 cmatrix_fields = contourm(Yeq, Xeq, non_empty_maps{tt}{ii},thld_fields, 'r', 'LineWidth', 2);
+        %
+        %                                 contourm(Yeq,Xeq, contour_continents_init, 0.3, 'k','LineWidth',2);
+        %                                 %             contourm(Yeq,Xeq, continents_init, 0.3, 'k','LineWidth',2);
+        %                                 ax2 = gca;
+        %                                 setm(ax2, 'MapProjection', 'robinson')
+        %                                 geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
+        %                                 colormap(ax2);
+        %
+        %                                 if strcmp(plot_continents_border_from_reconstruction,'true')
+        %
+        %                                     ax3 = gca;
+        %                                     setm(ax3, 'MapProjection', 'robinson')
+        %                                     %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
+        %                                     geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
+        %
+        %                                     ax3.SortMethod = 'childorder';
+        %                                 end
+        %
+        %                                 ax2.SortMethod = 'childorder';
+        %
+        %                                 % Create the full path for the repository
+        %                                 geofeatures_output = fullfile(path_model_output, 'additional_field_maps');
+        %
+        %                                 % Check if the repository already exists
+        %                                 if exist(geofeatures_output, 'dir') ~= 7
+        %                                     % Create the repository if it doesn't exist
+        %                                     mkdir(geofeatures_output);
+        %                                     fprintf('Repository Maps_additional_fields created successfully.');
+        %                                 end
+        %
+        %                                 %                                 Save the figure in the repository
+        %                                 fig_filename = fullfile(geofeatures_output, sprintf('%s_depth_%04d_%04d_threshold_%s_.png',additional_fields_to_load{ii},unique_depths(jj), i,num2str(thld_fields,'%.2f')));
+        %                                 saveas(gcf, fig_filename);
+        %                                 fprintf('Figure saved: %s\n', fig_filename);
+        %                             else
+        %                                 for jj = 1:size(non_empty_maps{tt},1)
+        %                                     if ~isempty(additional_fields_threshold{tt})
+        %                                         if contains(additional_fields_threshold{tt}, '<')
+        %                                             disp('test22')
+        %                                             % Check if the string is not empty
+        %                                             current_map_thlds = non_empty_maps{tt}{jj,ii} < str2double(extractAfter(additional_fields_threshold{jj}, '<'));
+        %                                             thld_fields = str2double(extractAfter(additional_fields_threshold{jj}, '<'));
+        %                                         else
+        %                                             % Check if the string is not empty
+        %                                             current_map_thlds = non_empty_maps{tt}{jj,ii} > str2double(extractAfter(additional_fields_threshold{jj}, '>'));
+        %                                             thld_fields = str2double(extractAfter(additional_fields_threshold{jj}, '>'));
+        %                                         end
+        %                                         if isnan(thld_fields)
+        %                                             thld_fields = default_threshold_fields;
+        %                                         end
+        %                                         current_map_position2=1-current_map_thlds;
+        %                                         current_map_position3 = ind2rgb(current_map_position2 + 1, CMap_additional_fields);
+        %                                         index_cmap = 3;
+        %                                         current_map_used = current_map_position3;
+        %
+        %                                     else
+        %                                         disp('test22')
+        %                                         thld_fields = default_threshold_fields; %give a default value for contourm function
+        %                                         current_map_field = non_empty_maps{tt}{jj,ii};
+        %                                         index_cmap = 4;
+        %                                         current_map_used = current_map_field;
+        %                                     end
+        %
+        %                                     h=figure;set(h, 'Visible', 'off');
+        %                                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
+        %                                     set(gcf, 'color', 'w');
+        %                                     view(0, 90);
+        %                                     axesm mercator
+        %                                     framem;
+        %                                     gridm;
+        %
+        %                                     ax1 = gca;
+        %                                     setm(ax1, 'MapProjection', 'robinson')
+        %                                     zlabel(additional_fields_to_load{ii});
+        %
+        %                                     if index_cmap ==4
+        %                                         title_str = sprintf('%s (%d km)', additional_fields_to_load{ii},unique_depths(1)./1e3);
+        %                                         title({title_str, time_str});
+        %                                         cmap1=crameri('lajolla');
+        %                                         c1 = colorbar();%ax1,'Position',[0.91 0.18 0.02 0.66]
+        %                                         clim([min(min(current_map_used)) max(max(current_map_used))]);
+        %                                         %                                     clim([0 1]);
+        %                                         set(ax1,'ColorScale');
+        %                                         c1.Label.String = additional_fields_to_load{ii};
+        %                                         c1.Label.FontSize = 14;
+        %                                         colormap(ax1,cmap1);
+        %                                         geoshow(Yeq, Xeq, current_map_used,'DisplayType', 'surface');
+        %                                     elseif index_cmap ==3
+        %                                         title_str = sprintf('%s (%s at %d km)', additional_fields_to_load{ii},num2str(thld_fields,'%.2f'),unique_depths(jj)./1e3);
+        %                                         title({title_str, time_str});
+        %                                         geoshow(Yeq, Xeq, current_map_used,'FaceAlpha',0.4);
+        %                                     end
+        %                                     freezeColors(ax1);
+        %                                     hold on;
+        %                                     cmatrix_fields = contourm(Yeq, Xeq, non_empty_maps{tt}{jj,ii}, [thld_fields thld_fields], 'r', 'LineWidth', 2);
+        %                                     contourm(Yeq,Xeq, contour_continents_init, 0.3, 'k','LineWidth',2);
+        %                                     %             contourm(Yeq,Xeq, continents_init, 0.3, 'k','LineWidth',2);
+        %                                     ax2 = gca;
+        %                                     setm(ax2, 'MapProjection', 'robinson')
+        %                                     geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
+        %                                     colormap(ax2);
+        %
+        %                                     if strcmp(plot_continents_border_from_reconstruction,'true')
+        %                                         ax3 = gca;
+        %                                         setm(ax3, 'MapProjection', 'robinson')
+        %                                         %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
+        %                                         geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
+        %
+        %                                         ax3.SortMethod = 'childorder';
+        %                                     end
+        %
+        %                                     ax2.SortMethod = 'childorder';
+        %
+        %                                     % Create the full path for the repository
+        %                                     geofeatures_output = fullfile(path_model_output, 'additional_field_maps');
+        %
+        %                                     % Check if the repository already exists
+        %                                     if exist(geofeatures_output, 'dir') ~= 7
+        %                                         % Create the repository if it doesn't exist
+        %                                         mkdir(geofeatures_output);
+        %                                         fprintf('Repository Maps_additional_fields created successfully.');
+        %                                     end
+        %
+        %                                     %                                 Save the figure in the repository
+        %                                     fig_filename = fullfile(geofeatures_output, sprintf('%s_depth_%04d_%04d_threshold_%s_.png',additional_fields_to_load{ii},unique_depths(jj), i,num2str(thld_fields,'%.2f')));
+        %                                     saveas(gcf, fig_filename);
+        %                                     fprintf('Figure saved: %s\n', fig_filename);
+        %
+        %                                 end
+        %                             end
+        %                         end
+        %                     end
+        %                 end
+        %             end
+        %         end
 
 
 
@@ -1195,7 +1195,7 @@ for i = start_step:max_num_files
 
             geoshow(Yeq, Xeq, log10(strain_rate), 'DisplayType', 'surface');
             ax1 = gca;
-            setm(ax1, 'MapProjection', 'robinson')
+            setm(ax1, 'MapProjection', 'robinson');
             zlabel('Surface');
             title({'Surface', time_str});
             c = colorbar;
@@ -1331,7 +1331,7 @@ for i = start_step:max_num_files
 
             geoshow(Yeq, Xeq, oceanic_age_domain, 'DisplayType', 'surface');
             ax1 = gca;
-            setm(ax1, 'MapProjection', 'robinson')
+            setm(ax1, 'MapProjection', 'robinson');
             zlabel('Surface');
             title({'Surface', time_str});
             cmap1=crameri('-roma');
@@ -1454,7 +1454,7 @@ for i = start_step:max_num_files
 
             geoshow(Yeq, Xeq,smooth_divergence, 'DisplayType', 'surface');
             ax1 = gca;
-            setm(ax1, 'MapProjection', 'robinson')
+            setm(ax1, 'MapProjection', 'robinson');
             zlabel('Surface');
             title({'Surface', time_str});
             cmap1=crameri('vik');
