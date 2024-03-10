@@ -3,7 +3,7 @@ function [geofeatures] = get_geodynamics_features_statistics(path_model_input, a
     write_geofeatures_statistics,remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
     additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize)
 
-allowed_parameters = {'subduction_and_plume_statistics','oceanic_age_statistics','continents_VRMS'};
+allowed_parameters = {'subduction_and_plume_statistics','oceanic_age_statistics','continents_VRMS','melt_statistics'};
 % Check if averaged_parameter is allowed
 if ~all(ismember(additional_postprocesses, allowed_parameters))
     error('Invalid parameter selected. The allowed parameters are: %s', strjoin(allowed_parameters, ', '));
@@ -46,12 +46,19 @@ files_required_1 =[];
 files_required_2 =[];
 files_required_3 =[];
 
+RMS_melt_surface = default_value;
+RMS_melt_depths = default_value;
+RMS_melt_sublithosphere = default_value;
+
 surface_additional_fields_to_load_map = [];
 lithosphere_additional_fields_to_load_map = [];
 depths_additional_fields_to_load_map = [];
 surface_additional_fields = [];
 lithosphere_additional_fields = [];
 depths_additional_fields = [];
+
+additional_fields_depths_to_visualize_ite = additional_fields_depths_to_visualize;
+additional_fields_threshold_ite = additional_fields_threshold;
 
 
 %Variable for velocity vectors
@@ -545,7 +552,11 @@ for i = start_step:max_num_files
                     for uu = 1:numel(unique_depths)
                         longitude_depths_downsampled = atan2(y_depths_downsampled{uu}, x_depths_downsampled{uu}) * 180 / pi;
                         latitude_depths_downsampled = asin(z_depths_downsampled{uu} ./ sqrt(x_depths_downsampled{uu}.^2 + y_depths_downsampled{uu}.^2 + z_depths_downsampled{uu}.^2)) * 180 / pi;
-                        depths_additional_fields{uu,f}=griddata(longitude_depths_downsampled, latitude_depths_downsampled, depths_additional_fields_to_load_map{uu,f}, Xeq, Yeq);
+                        if ~isempty(additional_fields_depths_to_visualize_ite{f,uu})
+                            depths_additional_fields{uu,f}=griddata(longitude_depths_downsampled, latitude_depths_downsampled, depths_additional_fields_to_load_map{uu,f}, Xeq, Yeq);
+                        else
+                            depths_additional_fields{uu,f}=[];
+                        end
                     end
                 end
             end
@@ -594,7 +605,7 @@ for i = start_step:max_num_files
             %         figure;
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96],'color','w');clf;
             view(0, 90);
-            axesm mercator
+            axesm mercator;
             framem;
             gridm;
             ax0 = gca;
@@ -612,7 +623,7 @@ for i = start_step:max_num_files
             c0.Label.FontSize = 14;
             hold on;
             ax2 = gca;
-            setm(ax2, 'MapProjection', 'robinson')
+            setm(ax2, 'MapProjection', 'robinson');
             geoshow(Yeq, Xeq,continents_reversed_position_for_plot_dark,'facealpha', 0);
             contourm(Yeq,Xeq, continents, 0.3, 'k','LineWidth',2);
             contourm(Yeq,Xeq, contour_continents_init, 0.3, 'w','LineWidth',2);
@@ -764,7 +775,7 @@ for i = start_step:max_num_files
                     set(gcf, 'color', 'w');
                     view(0, 90);
                     ax1 = gca;
-                    axesm mercator
+                    axesm mercator;
                     framem;
                     gridm;
                     plumes_position3 = ind2rgb(plumes_positions2 + 1, CMap_plume);
@@ -790,13 +801,13 @@ for i = start_step:max_num_files
                     plume_str = sprintf('Plumes: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km, %dK)', numPlumes(dtracking), plumes_depths_tracking(dtracking), plumes_non_adiabatic_tracking_temperature(dtracking)), 1:numel(numPlumes), 'UniformOutput', false), ' '));
                     subduction_str = sprintf('Subductions: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km, %dK)', numSubductions(dtracking), subduction_depths_tracking(dtracking), subduction_non_adiabatic_tracking_temperature(dtracking)), 1:numel(numSubductions), 'UniformOutput', false), ' '));
                     %                     subduction_str = sprintf('Subductions: %s', strjoin(arrayfun(@(dtracking) sprintf('%d (%d km)', numSubductions(dtracking), subduction_depths_tracking(dtracking)), 1:numel(numSubductions), 'UniformOutput', false), ' '));
-                    current_depth_str = sprintf('Current depth = %d km', current_depth_subductions(tt));
+                    current_depth_str = sprintf('Current depth = %d km', current_depth_subductions(tt)./1e3);
                     title_str = [{time_str} current_depth_str plume_str subduction_str];
                     title(title_str);
                     contourm(Yeq,Xeq, contour_continents_init, 0.3, 'k','LineWidth',2);
                     %             contourm(Yeq,Xeq, continents_init, 0.3, 'k','LineWidth',2);
                     ax2 = gca;
-                    setm(ax2, 'MapProjection', 'robinson')
+                    setm(ax2, 'MapProjection', 'robinson');
                     geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
                     colormap(ax2);
 
@@ -823,13 +834,11 @@ for i = start_step:max_num_files
                     end
 
                     % Save the figure in the repository
-                    fig_filename = fullfile(geofeatures_output, sprintf('geofeatures_depth_%04d_%04d.png',current_depth_subductions(tt), i));
+                    fig_filename = fullfile(geofeatures_output, sprintf('geofeatures_depth_%04d_%04d.png',current_depth_subductions(tt)./1e3, i));
                     saveas(gcf, fig_filename);
                     fprintf('Figure saved: %s\n', fig_filename);
 
                 end
-
-
             end
         end
 
@@ -841,28 +850,31 @@ for i = start_step:max_num_files
         index_cmap = [];
 
         if ~strcmp(additional_fields_to_load{1}, '')
-            additional_fields_threshold = additional_fields_threshold';
-            additional_fields_depths_to_visualize = additional_fields_depths_to_visualize';
+            additional_fields_threshold_ite_to_use = additional_fields_threshold_ite';
+            additional_fields_depths_to_visualize_ite_to_use = additional_fields_depths_to_visualize_ite';
             non_empty_maps = {surface_additional_fields, lithosphere_additional_fields, depths_additional_fields};
             non_empty_indices = ~cellfun('isempty', non_empty_maps);
 
             if any(non_empty_indices)
                 % Iterate over the non-empty maps and make plots
                 for tt = 1:numel(non_empty_maps)
+                                RMS_melt_depths=zeros(size(non_empty_maps{tt},1),1);
+                                RMS_melt_surface=zeros(size(non_empty_maps{tt},1),1);
+                                RMS_melt_sublithosphere=zeros(size(non_empty_maps{tt},1),1);
                     if non_empty_indices(tt)
                         for ii=1:numel(additional_fields_to_load)
                             for jj = 1:size(non_empty_maps{tt},1)
-                                if ~isempty(str2num(additional_fields_depths_to_visualize{jj,ii}))
-                                    if ~isempty(additional_fields_threshold{jj,ii})
-                                        if contains(additional_fields_threshold{jj,ii}, '<')
-%                                             disp('test2')
+                                if ~isempty(str2num(additional_fields_depths_to_visualize_ite_to_use{jj,ii}))
+                                    if ~isempty(additional_fields_threshold_ite_to_use{jj,ii})
+                                        if contains(additional_fields_threshold_ite_to_use{jj,ii}, '<')
+                                            %                                             disp('test2')
                                             % Check if the string is not empty
-                                            current_map_thlds = non_empty_maps{tt}{jj,ii} < str2double(extractAfter(additional_fields_threshold{jj,ii}, '<'));
-                                            thld_fields = str2double(extractAfter(additional_fields_threshold{jj,ii}, '<'));
+                                            current_map_thlds = non_empty_maps{tt}{jj,ii} < str2double(extractAfter(additional_fields_threshold_ite_to_use{jj,ii}, '<'));
+                                            thld_fields = str2double(extractAfter(additional_fields_threshold_ite_to_use{jj,ii}, '<'));
                                         else
                                             % Check if the string is not empty
-                                            current_map_thlds = non_empty_maps{tt}{jj,ii} > str2double(extractAfter(additional_fields_threshold{jj,ii}, '>'));
-                                            thld_fields = str2double(extractAfter(additional_fields_threshold{jj,ii}, '>'));
+                                            current_map_thlds = non_empty_maps{tt}{jj,ii} > str2double(extractAfter(additional_fields_threshold_ite_to_use{jj,ii}, '>'));
+                                            thld_fields = str2double(extractAfter(additional_fields_threshold_ite_to_use{jj,ii}, '>'));
                                         end
                                         if isnan(thld_fields)
                                             thld_fields = default_threshold_fields;
@@ -873,7 +885,7 @@ for i = start_step:max_num_files
                                         current_map_used = current_map_position3;
 
                                     else
-%                                         disp('test3')
+                                        %                                         disp('test3')
                                         thld_fields = default_threshold_fields; %give a default value for contourm function
                                         current_map_field = non_empty_maps{tt}{jj,ii};
                                         index_cmap = 4;
@@ -884,7 +896,7 @@ for i = start_step:max_num_files
                                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
                                     set(gcf, 'color', 'w');
                                     view(0, 90);
-                                    axesm mercator
+                                    axesm mercator;
                                     framem;
                                     gridm;
 
@@ -929,7 +941,7 @@ for i = start_step:max_num_files
                                     contourm(Yeq,Xeq, contour_continents_init, 0.3, 'k','LineWidth',2);
                                     %             contourm(Yeq,Xeq, continents_init, 0.3, 'k','LineWidth',2);
                                     ax2 = gca;
-                                    setm(ax2, 'MapProjection', 'robinson')
+                                    setm(ax2, 'MapProjection', 'robinson');
                                     geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
                                     colormap(ax2);
 
@@ -962,9 +974,20 @@ for i = start_step:max_num_files
                                     end
                                     saveas(gcf, fig_filename);
                                     fprintf('Figure saved: %s\n', fig_filename);
+
+                                    if any(strcmp(additional_postprocesses, 'melt_statistics'))
+                                        if strcmp(additional_fields_to_load{ii},'melt_fraction')
+                                            if non_empty_indices(1)==tt %surface
+                                               RMS_melt_surface(jj) = rms(non_empty_maps{tt}{jj,ii}(:),'omitnan');
+                                            elseif non_empty_indices(2)==tt %surface
+                                               RMS_melt_sublithosphere(jj) = rms(non_empty_maps{tt}{jj,ii}(:),'omitnan');
+                                            elseif non_empty_indices(3)==tt %surface
+                                               RMS_melt_depths(jj) = rms(non_empty_maps{tt}{jj,ii}(:),'omitnan');
+                                            end
+                                        end
+                                    end
                                 end
                             end
-
                         end
                     end
                 end
@@ -1191,7 +1214,7 @@ for i = start_step:max_num_files
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
             set(gcf, 'color', 'w');
             view(0, 90);
-            axesm mercator
+            axesm mercator;
 
             geoshow(Yeq, Xeq, log10(strain_rate), 'DisplayType', 'surface');
             ax1 = gca;
@@ -1213,7 +1236,7 @@ for i = start_step:max_num_files
             hold on;
             % Plot continents with transparency
             ax2 = gca;
-            setm(ax2, 'MapProjection', 'robinson')
+            setm(ax2, 'MapProjection', 'robinson');
             geoshow(Yeq, Xeq,continents_reversed_position_for_plot,'facealpha', 0.3);
             colormap(ax2);freezeColors;
             contourm(Yeq,Xeq, continents, 0.3, 'k','LineWidth',2);
@@ -1325,7 +1348,7 @@ for i = start_step:max_num_files
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
             set(gcf, 'color', 'w');
             view(0, 90);
-            axesm mercator
+            axesm mercator;
             framem;
             gridm;
 
@@ -1448,7 +1471,7 @@ for i = start_step:max_num_files
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
             set(gcf, 'color', 'w');
             view(0, 90);
-            axesm mercator
+            axesm mercator;
             framem;
             gridm;
 
@@ -1473,7 +1496,7 @@ for i = start_step:max_num_files
 
 
             ax2 = gca;
-            setm(ax2, 'MapProjection', 'robinson')
+            setm(ax2, 'MapProjection', 'robinson');
             geoshow(Yeq, Xeq, continents_reversed_position_for_plot,'facealpha', 0.3);
             colormap(ax2);
             contourm(Yeq,Xeq, continents, 0.3, 'k','LineWidth',2);
@@ -1547,15 +1570,15 @@ for i = start_step:max_num_files
             V_rms_continents = rms(norm_square_vel_continents);
         end
 
+
         if strcmp(write_geofeatures_statistics, 'true')
 
             if any(strcmp(additional_postprocesses, 'subduction_and_plume_statistics'))
                 ite_depth = numel(plumes_depths_tracking);
             else
-                ite_depth = 1; numel(plumes_depths_tracking)
+                ite_depth = 1; 
             end
-
-            if any(strcmp(additional_postprocesses, 'continents_VRMS')) ||strcmp(write_geofeatures_statistics, 'true') && any(strcmp(additional_postprocesses, 'subduction_and_plume_statistics'))
+                if any(strcmp(additional_postprocesses, 'continents_VRMS')) || any(strcmp(additional_postprocesses, 'subduction_and_plume_statistics'))|| any(strcmp(additional_postprocesses, 'melt_statistics'))
                 %% Write everything down
                 % We already check in postprocess.m whether a file already exists, so that
                 % we plot the data directly from the file and do not rewrite the file.
@@ -1602,14 +1625,14 @@ for i = start_step:max_num_files
                         geofeatures = readtable(fullFilePath_geofeatures);
 
                         % Add new values to the existing table
-                        newRow = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents, ...
-                            'VariableNames', {'Time', 'NumPlumes', 'NumSubductions', 'NumSubduction_connected', 'Depths', 'Maxferet_mean', 'Maxferet_max', 'Maxferet_in', 'nferet', 'V_rms_surface', 'V_rms_continents'});
+                        newRow = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,RMS_melt_surface(ttd),RMS_melt_sublithosphere(ttd),RMS_melt_depths(ttd), ...
+                            'VariableNames', {'Time', 'NumPlumes', 'NumSubductions', 'NumSubduction_connected', 'Depths', 'Maxferet_mean', 'Maxferet_max', 'Maxferet_in', 'nferet', 'V_rms_surface', 'V_rms_continents','surface_rms_melt','sublithosphere_rms_melt','depths_rms_melt'});
 
                         geofeatures = vertcat(geofeatures, newRow);
                     else
                         % File doesn't exist, create a new table
-                        geofeatures = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,...
-                            'VariableNames', {'Time', 'NumPlumes', 'NumSubductions', 'NumSubduction_connected', 'Depths', 'Maxferet_mean', 'Maxferet_max', 'Maxferet_in', 'nferet', 'V_rms_surface', 'V_rms_continents'});
+                        geofeatures = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,RMS_melt_surface(ttd),RMS_melt_sublithosphere(ttd),RMS_melt_depths(ttd),...
+                            'VariableNames', {'Time', 'NumPlumes', 'NumSubductions', 'NumSubduction_connected', 'Depths', 'Maxferet_mean', 'Maxferet_max', 'Maxferet_in', 'nferet', 'V_rms_surface', 'V_rms_continents','surface_rms_melt','sublithosphere_rms_melt','depths_rms_melt'});
                     end
 
                     %         % Display the updated table
@@ -1618,7 +1641,6 @@ for i = start_step:max_num_files
                 end
                 disp(geofeatures);
                 fprintf('Table saved to %s successfully.\n', filename_geofeatures);
-
             end
 
             if any(strcmp(additional_postprocesses, 'oceanic_age_statistics'))
@@ -1646,6 +1668,7 @@ for i = start_step:max_num_files
                 fprintf('Table geo_oceans saved to %s successfully.\n', filename_oceans);
 
             end
+            
         end
     catch
         fprintf('For some reason step %s didn''t work and will be skipped. This can occur if a paraview file extracted is missing or corrupted\n', i);
