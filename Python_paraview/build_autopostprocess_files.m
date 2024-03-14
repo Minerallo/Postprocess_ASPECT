@@ -19,7 +19,7 @@ cd(path_to_postprocess_ASPECT);
 % model_names = {'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003', ...
 %     'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003'};
     
-model_names = {'R01e_Rodinia_2GPa_Mantle_C20MPa_f003_LR'};
+model_names = {'RSRW01g_Rodinia_2GPa_Mantle_C10MPa_SW_5em16_f017_to_f001_LR_ViscC5e19'};
 %     'RSRW01a_Rodinia_2GPa_Mantle_C10MPa_SW_1em16_f064_to_f003_LR',...
 %     'P01a_Pangea_1GPa_Mantle_C40MPa_LR',  ...
 %     'P01c_Pangea_1GPa_Mantle_C60MPa_LR',  ...
@@ -47,7 +47,7 @@ model_names = {'R01e_Rodinia_2GPa_Mantle_C20MPa_f003_LR'};
 
 % Give a name or it will give for name auto_ followed by the list of models
 % using their first word before "_"
-output_directory_name = '';
+output_directory_name = 'auto_RSRW01g';
 
 
     % Use regular expression to extract the first model names before underscore
