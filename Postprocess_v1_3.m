@@ -188,7 +188,7 @@ additional_fields_to_load = {''};
 
 % Give the threshold and indicate if positive of negative using > or <, 
 % a empty case '' will plot the field with no threshold
-additional_fields_threshold = {'>0.05','>0.25','>0.25','>0.25';
+additional_fields_threshold = {'>0.05','>0.05','>0.25','>0.25','>0.25';...
                                  '','','','',''};
 
 % the depth of the additional_fields to map can be given as below, let '' if no mapping is needed                              
