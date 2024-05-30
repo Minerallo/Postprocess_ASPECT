@@ -91,7 +91,7 @@ for i = 1:resample_topography:num_files
 
 end
 elevation_topography = elevation_map(:, :);
-time_elevation_topography = 0:dt:dt * (size(elevation, 1) - 1);
+time_elevation_topography = 0:dt:dt * (size(elevation_map, 1) - 1);
 % time_elevation=0:(dt*(num_files/resample_topography))/(num_files/resample_topography):dt*(num_files/resample_topography); %not working 
 
 if strcmp(calculate_topography_dip, 'true')

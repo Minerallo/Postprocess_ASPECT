@@ -16,7 +16,7 @@ end
 
 for m = 1:numel(path_models)
     path_model = cell2mat(path_models(m));
-    make_video='true';
+    make_video='false';
     resample_dynamic_topography = 10;
 
     statistic_parameters = {'Time'};

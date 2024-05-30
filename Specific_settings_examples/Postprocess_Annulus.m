@@ -38,8 +38,8 @@ selected_output_folder_path ='/Users/ponsm/Nextcloud/group_monitoring_earth_evol
 model_geometry = 'sphere';
 % 'box'; 
 
-Save_figures = 'true';
-Display_figures = 'false';
+Save_figures = 'false';
+Display_figures = 'true';
 
 % Model parameters
 

@@ -135,6 +135,10 @@ run_spherical_additional_postprocess = 'true';
 %Path where the data extracted by paraview are stored locally
 path_extracted_files_input ='/Volumes/Jerry/global_models_3d_extract/';
 
+% In case the user may just want to visualize the model at a specific time
+% or output the model at a specific time in My
+visualize_model_at_specific_time = '250'; %My
+
 % This process can take a significant amount of time depending on the amount of files to process
 %therefore I had a restart option so the postprocessing does not need to
 %restart from the first file if it is stopped. 'auto' means that it will
@@ -149,7 +153,7 @@ output_figures_for_spherical_additional_postprocess = 'true';
 write_geofeatures_statistics = 'true' ;
 % You can select which statistics you want to write down
 % e.g additional_postprocesses = {'subduction_and_plume_statistics','oceanic_age_statistics','continents_VRMS'};
-additional_postprocesses = {'subduction_and_plume_statistics'};
+additional_postprocesses = {'subduction_and_plume_statistics','melt_statistics'};
 
 % Select which figures to output
 % e.g output_additional_maps_figures = {'topography','geofeatures','strain_rate'};
@@ -220,6 +224,7 @@ compositional_field_name_of_continents = 'continent';
 % In the case where everytime irregualar step is outputted from ASPECT and
 % extracted from Paraview then time should be added to the files for consistency. 
 Interval_of_time_output_for_additional_postprocess = 1; %in Myr
+
 
 %% Plot section
 % Path existence check
@@ -1043,21 +1048,26 @@ for t = 1:numel(path_models)
         file_geofeatures_exists = exist(fullFilePath_geofeatures, 'file');
         init_step=0;
         if strcmp(restart_additional_postprocess,'auto')
-            [init_step, max_step] = get_last_timestep(path_model, path_model_output,output_additional_maps_figures);
-            if init_step == max_step
+            [init_step, max_step,end_step] = get_last_timestep(path_model, path_model_output,output_additional_maps_figures,visualize_model_at_specific_time,Interval_of_time_output_for_additional_postprocess);
+            if ~isempty(visualize_model_at_specific_time)
+                if end_step>max_step
+                    disp('The time asked to ouput by visualize_model_at_specific_time does not exist.');
+                else
+                    disp(['Additional spherical postprocessing will visualize the model at time step ' num2str(end_step)]);
+                end
+            elseif isempty(visualize_model_at_specific_time) && init_step == max_step
                 disp('The model has already finished computing the spherical additional postprocess.');
             else
                 disp(['Additional spherical postprocessing will start or restart from init_step ' num2str(init_step)]);
-
-                % If it doesn't exist then run the additional postprocess function
-                if  strcmp(restart_additional_postprocess,'auto') && (init_step < max_step)
-                    [geofeatures] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,...
-                        plumes_non_adiabatic_tracking_temperature,subduction_non_adiabatic_tracking_temperature,trenches_elevation_threshold,path_model_output,...
-                        compositional_field_name_of_continents,output_figures_for_spherical_additional_postprocess,output_additional_maps_figures,write_geofeatures_statistics,...
-                        remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
-                        additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize);
-                    % If the file exists then plot 'subduction_and_plume_statistics'
-                end
+            end
+            % If it doesn't exist then run the additional postprocess function
+            if  strcmp(restart_additional_postprocess,'auto') && (init_step < max_step) || ~isempty(visualize_model_at_specific_time) && (end_step<max_step)
+                [geofeatures] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,...
+                    plumes_non_adiabatic_tracking_temperature,subduction_non_adiabatic_tracking_temperature,trenches_elevation_threshold,path_model_output,...
+                    compositional_field_name_of_continents,output_figures_for_spherical_additional_postprocess,output_additional_maps_figures,write_geofeatures_statistics,...
+                    remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
+                    additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize,visualize_model_at_specific_time,end_step);
+                % If the file exists then plot 'subduction_and_plume_statistics'
             end
         end
 
@@ -1156,6 +1166,7 @@ for t = 1:numel(path_models)
                 plot(uniqueTime, Vrms_surface, 'r-', 'LineWidth', 2, 'DisplayName', 'VRMS Surface');
 
                 % Adding labels and title
+                ylim([0, 0.1]);
                 xlabel('Time (My)');
                 ylabel('VRMS (m.yr^-^1)');
                 title('VRMS over Time for Surface and Continents only');
@@ -1212,6 +1223,7 @@ for t = 1:numel(path_models)
                     hold on;
                     plot(uniqueTime,Mobility_resol_mobility, 'r-', 'LineWidth', 2, 'DisplayName', 'Full Mobility');
                     xlim([min(uniqueTime), max(uniqueTime)]);
+                    ylim([0, 0.1]);
                     % Adding labels and title
                     xlabel('Time (My)');
                     ylabel('Continents Mobility');

@@ -161,9 +161,10 @@ fprintf(fid, '#!/bin/bash\n\n');
 % fprintf(fid, '    rsync -varz -e ''ssh -i %s'' --include="*statistics*" --exclude="*" bbkponsm@blogin.hlrn.de:%s${model} %s${model}/.\n',ssh_key, models_cluster_directory, local_base_directory);
 
 for i = 1:numel(model_names)
-    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n',ssh_key,remote_base_directory, model_names{i}, local_base_directory, model_names{i});
+    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="original.prm" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="*statistics*" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="depth_average.txt" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
+    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n',ssh_key,remote_base_directory, model_names{i}, local_base_directory, model_names{i});
 end
 
 fclose(fid);

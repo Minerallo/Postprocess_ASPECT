@@ -18,8 +18,8 @@ cd(path_to_postprocess_ASPECT);
 %% List of specific model names to give
 % model_names = {'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003', ...
 %     'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003'};
-    
-model_names = {'RSRW01g_Rodinia_2GPa_Mantle_C10MPa_SW_5em16_f017_to_f001_LR_ViscC5e19'};
+
+model_names = {'R01fSB3i_R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f001_viscCc5e19_cont150km_Ediffbackground'};
 %     'RSRW01a_Rodinia_2GPa_Mantle_C10MPa_SW_1em16_f064_to_f003_LR',...
 %     'P01a_Pangea_1GPa_Mantle_C40MPa_LR',  ...
 %     'P01c_Pangea_1GPa_Mantle_C60MPa_LR',  ...
@@ -47,7 +47,7 @@ model_names = {'RSRW01g_Rodinia_2GPa_Mantle_C10MPa_SW_5em16_f017_to_f001_LR_Visc
 
 % Give a name or it will give for name auto_ followed by the list of models
 % using their first word before "_"
-output_directory_name = 'auto_RSRW01g';
+output_directory_name = '';
 
 
     % Use regular expression to extract the first model names before underscore
@@ -166,9 +166,10 @@ fprintf(fid, '#!/bin/bash\n\n');
 % fprintf(fid, '    rsync -varz -e ''ssh -i %s'' --include="*statistics*" --exclude="*" bbkponsm@blogin.hlrn.de:%s${model} %s${model}/.\n',ssh_key, models_cluster_directory, local_base_directory);
 
 for i = 1:numel(model_names)
-    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n',ssh_key,remote_base_directory, model_names{i}, local_base_directory, model_names{i});
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="*statistics*" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="depth_average.txt" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
+    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="original.prm" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
+    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n',ssh_key,remote_base_directory, model_names{i}, local_base_directory, model_names{i});
 end
 
 fclose(fid);
@@ -183,6 +184,7 @@ output_pvbatch_jobscript = fullfile(output_directory, 'jobparaview_global3D.sh')
 fid_slurm = fopen(output_pvbatch_jobscript, 'w');
 fprintf(fid_slurm, '#!/bin/bash\n\n');
 fprintf(fid_slurm, '#SBATCH -A bbk00014\n');
+fprintf(fid_slurm, 'module unload gcc/9.3.0\n\n');
 fprintf(fid_slurm, 'module load gcc/9.2.0 openmpi/gcc.9 anaconda3 llvm/9.0.0 paraview\n\n');
 fprintf(fid_slurm, '# Ensure the cpus-per-task option is propagated to srun commands\n');
 fprintf(fid_slurm, 'export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK\n\n');
@@ -256,7 +258,7 @@ fprintf(fid,'# This script automatize the the extraction of the data and the pos
 fprintf(fid, '\n');
 fprintf(fid,'echo "Building sshfs connection of the remote server."\n');
 fprintf(fid, '\n');
-fprintf(fid, 'umount -f ~/Desktop/modelblogin\n');
+% fprintf(fid, 'umount -f ~/Desktop/modelblogin\n');
 fprintf(fid, '\n');
 fprintf(fid, 'sshfs -o "IdentityFile=/Users/ponsm/.ssh/id_rsa_hlrn" bbkponsm@blogin.hlrn.de:/scratch/usr/bbkponsm /Users/ponsm/Desktop/modelblogin -o defer_permissions\n');
 fprintf(fid, '\n');
@@ -266,10 +268,10 @@ fprintf(fid, '\n');
 fprintf(fid, 'rsync -varz -e "ssh -i /Users/ponsm/.ssh/id_rsa_hlrn" /Users/ponsm/Nextcloud/Postdoc_MEET/Modelling/Postprocess_ASPECT/%s/Model_extract_global_3D_auto.py bbkponsm@blogin.hlrn.de:%s%s/.\n',output_directory,remote_Postprocess_scripts,output_directory);
 fprintf(fid, 'rsync -varz -e "ssh -i /Users/ponsm/.ssh/id_rsa_hlrn" /Users/ponsm/Nextcloud/Postdoc_MEET/Modelling/Postprocess_ASPECT/%s/jobparaview_global3D.sh bbkponsm@blogin.hlrn.de:%s%s/.\n',output_directory,remote_Postprocess_scripts,output_directory);
 fprintf(fid, '\n');
-fprintf(fid, 'echo "Running Pvbatch on the remote server"\n');
+fprintf(fid, 'echo "Running Pvbatch %s on the remote server"\n',jobname);
 fprintf(fid, ['ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ', ...
     '''cd %s%s/; ', ...
-    'sbatch -p large96 -t 12:00:00 -N 1 --tasks-per-node 96 -o %%j.output -e %%j.output --mem=747000mb --account bbkponsm --job-name %s ', ...
+    'sbatch -p large96 -t 12:00:00 -N 1 --tasks-per-node 96 -o %%j.output -e %%j.error --mem=747000mb --account bbkponsm --job-name %s ', ...
     '%s%s/jobparaview_global3D.sh''\n'],remote_Postprocess_scripts,output_directory,jobname,remote_Postprocess_scripts,output_directory);
 fprintf(fid, '\n');
 fprintf(fid, '# Wait for the job to finish\n');
@@ -305,7 +307,7 @@ fprintf(fid,'# This script automatize the the extraction of the data and the pos
 fprintf(fid, '\n');
 fprintf(fid,'echo "Building sshfs connection of the remote server."\n');
 fprintf(fid, '\n');
-fprintf(fid, 'umount -f ~/Desktop/modelblogin\n');
+% fprintf(fid, 'umount -f ~/Desktop/modelblogin\n');
 fprintf(fid, '\n');
 fprintf(fid, 'sshfs -o "IdentityFile=/Users/ponsm/.ssh/id_rsa_hlrn" bbkponsm@blogin.hlrn.de:/scratch/usr/bbkponsm /Users/ponsm/Desktop/modelblogin -o defer_permissions\n');
 fprintf(fid, '\n');

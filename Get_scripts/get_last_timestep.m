@@ -1,4 +1,4 @@
-function [init_step, max_step] = get_last_timestep(path_model,path_model_output,output_additional_maps_figures)
+function [init_step, max_step, end_step] = get_last_timestep(path_model,path_model_output,output_additional_maps_figures, visualize_model_at_specific_time,Interval_of_time_output_for_additional_postprocess)
 
 num_files_surface=[];
 num_files_lithosphere=[];
@@ -47,4 +47,36 @@ end
 min_check_files = min(num_check_files);
 
 init_step=min_check_files;
+
+if~isempty(visualize_model_at_specific_time)
+    year_to_start = str2num(visualize_model_at_specific_time);
+    end_step = round(year_to_start/Interval_of_time_output_for_additional_postprocess)+1;
+else 
+    end_step =[];
+    year_to_start = [];
 end
+end
+
+% % Assuming time and RMS_Surface_velocity are already defined
+% % Assuming data_stats is a matrix containing time and velocity data
+% 
+% % Calculate RMS_Surface_velocity
+% RMS_Surface_velocity = data_stats(:,39) .* data_stats(:,38);
+% 
+% % Plot the data with thicker line
+% plot(time, RMS_Surface_velocity,'r', 'LineWidth', 2); % Set LineWidth to 2 for thicker line
+% hold on; % Hold the plot to add legend and set axis limits
+% 
+% % Add legend
+% % legend('RMS Surface Velocity');
+% 
+% % Set y-axis limits
+% ylim([0 0.1]);
+% 
+% % Label the axes
+% xlabel('Time');
+% ylabel('RMS Surface Velocity');
+% 
+% % Add title
+% title('RMS Surface Velocity over Time');
+

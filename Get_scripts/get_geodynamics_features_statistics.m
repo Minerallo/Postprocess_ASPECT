@@ -1,7 +1,7 @@
 function [geofeatures] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,plumes_non_adiabatic_tracking_temperature,...
     subduction_non_adiabatic_tracking_temperature,trenches_elevation_threshold,path_model_output,compositional_field_name_of_continents,output_figures_for_spherical_additional_postprocess,output_additional_maps_figures,...
     write_geofeatures_statistics,remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
-    additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize)
+    additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize,visualize_model_at_specific_time,end_step,Display_figures,plot_an_additional_field_on_top_of_geofeatures)
 
 allowed_parameters = {'subduction_and_plume_statistics','oceanic_age_statistics','continents_VRMS','melt_statistics'};
 % Check if averaged_parameter is allowed
@@ -71,7 +71,7 @@ CMap_boundaries = [ 0.0471 0.4392 0.2275;  1 1 1];
 CMap_continents = [ 0.4745 0.3647 0.3020;  1 1 1];
 CMap_continents_dark = [ 0 0 0;  1 1 1];
 CMap_additional_fields = [1 0.2 0 ;  1 1 1];
-
+CMap_additional_fields_for_geofeatures = [0.8 0 0.8 ;  1 1 1];
 
 
 %Required files for each scheme
@@ -190,7 +190,7 @@ if any(strcmp(files_requirement, 'surface'))
     %     surface_init_continent_sorted = surface_init.continent(theta_index_init);
 
     % Check if the field exists and assign the parameter accordingly
-    if ismember('continent', surface_init.Properties.VariableNames)
+    if ismember(compositional_field_name_of_continents, surface_init.Properties.VariableNames)
         surface_init_continent_sorted = surface_init.(compositional_field_name_of_continents)(theta_index_init);
     else
         % Handle the case where the field does not exist
@@ -215,13 +215,24 @@ if any(strcmp(files_requirement, 'surface'))
 end
 
 % For restart
-if init_step~=0
-    start_step = init_step;
-else
+if isempty(visualize_model_at_specific_time)
+    if init_step~=0
+        start_step = init_step;
+         final_step = max_num_files;
+    else
+        start_step = 1;
+         final_step = max_num_files;
+    end
+elseif ~isempty(visualize_model_at_specific_time)
+    start_step = end_step;
+    final_step = end_step;
+
+else 
     start_step = 1;
+    final_step = max_num_files;
 end
 
-for i = start_step:max_num_files
+for i = start_step:final_step
 
     count_ite = count_ite+1;
     count_ite_with_steps = start_step+count_ite+1;
@@ -271,6 +282,7 @@ for i = start_step:max_num_files
             end
         end
 
+
         if strcmp(plot_continents_border_from_reconstruction,'true')
             % Convert model time to corresponding filename time
             filename_time = reference_time_My_to_Ma - time_for_output_structures;
@@ -279,7 +291,7 @@ for i = start_step:max_num_files
             rounded_filename_time = floor(filename_time);
 
             % Create the filename string
-            filename_time_str = sprintf('/Users/ponsm/Nextcloud/Postdoc_MEET/Modelling/Postprocess_ASPECT/data/reconstructed_%.2fMa.shp', rounded_filename_time);
+            filename_time_str = sprintf('../data/reconstructed_%.2fMa.shp', rounded_filename_time);
 
             % Load the shapefile if needed
             shape_continents = shaperead(filename_time_str,'UseGeoCoords',true);
@@ -329,7 +341,7 @@ for i = start_step:max_num_files
 
 
             % Check if the field exists and assign the parameter accordingly
-            if ismember('continent', surface.Properties.VariableNames)
+            if ismember(compositional_field_name_of_continents, surface.Properties.VariableNames)
                 surface_continent_sorted = surface.(compositional_field_name_of_continents)(theta_index);
             else
                 % Handle the case where the field does not exist
@@ -489,7 +501,7 @@ for i = start_step:max_num_files
             end
 
             % Check if the field exists and assign the parameter accordingly
-            if ismember('continent', lithosphere.Properties.VariableNames)
+            if ismember(compositional_field_name_of_continents, lithosphere.Properties.VariableNames)
                 lithosphere_continent_sorted = lithosphere.(compositional_field_name_of_continents)(theta_index_lithosphere);
             else
                 % Handle the case where the field does not exist
@@ -592,7 +604,7 @@ for i = start_step:max_num_files
 
             %With 1900m readjustement due to wrong continent that needs some
             %adjustement
-            %         Topo_corrected(idx_oceans) = Topo_corrected(idx_oceans)-1900 - (Topo_corrected(idx_oceans)<0).* (1000 / 3300).* abs(Topo_corrected(idx_oceans));
+%             Topo_corrected(idx_cont) = Topo_corrected(idx_cont)+1900;
         end
         if any(strcmp(output_additional_maps_figures, 'topography'))
             colormap_name = 'Oleron_256';
@@ -601,7 +613,13 @@ for i = start_step:max_num_files
 
             Topo_color = interp1(oleron_256(:, 1),oleron_256(:, 2:end), linspace(min(oleron_256(:, 1)), max(oleron_256(:, 1)), num_lines));
 
-            h=figure;set(h, 'Visible', 'off');
+            h=figure;
+            % Set visibility based on Display_figures
+            if strcmp(Display_figures, 'true')
+                set(h, 'Visible', 'on');
+            else
+                set(h, 'Visible', 'off');
+            end
             %         figure;
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96],'color','w');clf;
             view(0, 90);
@@ -643,6 +661,7 @@ for i = start_step:max_num_files
                 ax3.SortMethod = 'childorder';
             end
             ax2.SortMethod='childorder';
+            hold off;
 
 
             % Create the full path for the repository
@@ -664,7 +683,6 @@ for i = start_step:max_num_files
 
         if any(strcmp(additional_postprocesses, 'subduction_and_plume_statistics')) && i<=min([num_files_surface, num_files_depths])
             %% Track plumes and subductions over depths
-
             for tt= 1:numel(plumes_depths_tracking)
                 matching_depths_plumes_indices = find(ismember(unique_depths, plumes_depths_tracking(tt).*1e3));
                 current_depth_plumes(tt)=unique_depths(matching_depths_plumes_indices);
@@ -765,12 +783,56 @@ for i = start_step:max_num_files
 
                 end
 
+                %If the user want to plot an additional field with
+                %threshold on top of the geofeature map then we run the
+                %following. The addtional field  will be read from the
+                %additional field function.
+                
+                CMap_additional_fields_for_geofeatures = [0.8 0 0.8 ;  1 1 1];
+
+                if ~isempty(plot_an_additional_field_on_top_of_geofeatures)
+                    if ismember(plot_an_additional_field_on_top_of_geofeatures, additional_fields_to_load)
+                        additional_fields_threshold_ite_to_use_for_geofeatures = additional_fields_threshold_ite';
+                        additional_fields_depths_to_visualize_ite_to_use_on_top = additional_fields_depths_to_visualize_ite';
+                        [field_is_member, idx_member] = ismember(plot_an_additional_field_on_top_of_geofeatures, additional_fields_to_load);
+                        if ~isempty(str2num(additional_fields_depths_to_visualize_ite_to_use_on_top{tt,idx_member}))
+                            if ~isempty(additional_fields_threshold_ite_to_use_for_geofeatures{tt,idx_member})
+                                if contains(additional_fields_threshold_ite_to_use_for_geofeatures{tt,idx_member}, '<')
+                                    %                                             disp('test2')
+                                    % Check if the string is not empty
+                                    current_map_thlds = depths_additional_fields{tt,idx_member} < str2double(extractAfter(additional_fields_threshold_ite_to_use_for_geofeatures{tt,idx_member}, '<'));
+                                    thld_fields = str2double(extractAfter(additional_fields_threshold_ite_to_use_for_geofeatures{tt,idx_member}, '<'));
+                                else
+                                    % Check if the string is not empty
+                                    current_map_thlds = depths_additional_fields{tt,idx_member} > str2double(extractAfter(additional_fields_threshold_ite_to_use_for_geofeatures{tt,idx_member}, '>'));
+                                    thld_fields = str2double(extractAfter(additional_fields_threshold_ite_to_use_for_geofeatures{tt,idx_member}, '>'));
+                                end
+                                if isnan(thld_fields)
+                                    thld_fields = default_threshold_fields;
+                                end
+                                current_map_position2=1-current_map_thlds;
+                                current_map_position3 = ind2rgb(current_map_position2 + 1, CMap_additional_fields_for_geofeatures);
+                                current_map_used = current_map_position3;
+                            end
+                        end
+                    end
+                else
+                    disp(['The field ', plot_an_additional_field_on_top_of_geofeatures, ' should be added in additional field preferably to plot for all depths to be plotted on top of geofeatures']);
+                end
+
+
                 if strcmp(output_figures_for_spherical_additional_postprocess,'true') && any(strcmp(output_additional_maps_figures, 'geofeatures'))
                     Plate_boundaries = strain_rate;
                     Plate_boundaries = Plate_boundaries>5e-15;
                     Plate_boundaries2 = 1-Plate_boundaries;
 
-                    h=figure;set(h, 'Visible', 'off');
+                    h=figure;
+                    % Set visibility based on Display_figures
+                    if strcmp(Display_figures, 'true')
+                        set(h, 'Visible', 'on');
+                    else
+                        set(h, 'Visible', 'off');
+                    end
                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96],'color','w');clf;
                     set(gcf, 'color', 'w');
                     view(0, 90);
@@ -821,7 +883,20 @@ for i = start_step:max_num_files
                         ax3.SortMethod = 'childorder';
                     end
 
+                    if ~isempty(plot_an_additional_field_on_top_of_geofeatures)
+
+                        ax4 = gca;
+                        setm(ax4, 'MapProjection', 'robinson')
+                        %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
+%                         geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
+                     geoshow(Yeq, Xeq, current_map_used,'FaceAlpha',0.4);
+                     cmatrix_fields = contourm(Yeq, Xeq, depths_additional_fields{tt,idx_member}, [thld_fields thld_fields], 'LineColor', [0.8 0 0.8], 'LineWidth', 2);
+                        
+                     ax4.SortMethod = 'childorder';
+                    end
+
                     ax2.SortMethod = 'childorder';
+                    hold off;
 
                     % Create the full path for the repository
                     geofeatures_output = fullfile(path_model_output, 'Maps_geofeatures');
@@ -892,7 +967,13 @@ for i = start_step:max_num_files
                                         current_map_used = current_map_field;
                                     end
 
-                                    h=figure;set(h, 'Visible', 'off');
+                                    h=figure;
+                                    % Set visibility based on Display_figures
+                                    if strcmp(Display_figures, 'true')
+                                        set(h, 'Visible', 'on');
+                                    else
+                                        set(h, 'Visible', 'off');
+                                    end
                                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
                                     set(gcf, 'color', 'w');
                                     view(0, 90);
@@ -955,6 +1036,7 @@ for i = start_step:max_num_files
                                     end
 
                                     ax2.SortMethod = 'childorder';
+                                    hold off;
 
                                     % Create the full path for the repository
                                     geofeatures_output = fullfile(path_model_output, 'additional_field_maps');
@@ -1036,7 +1118,13 @@ for i = start_step:max_num_files
         %                                 end
         %                                 %                                 current_map_used = current_map_position3;
         %                                 %                                 ~isempty(additional_fields_threshold{1}) * current_map_field + isempty(additional_fields_threshold{1}) * current_map_position3;
-        %                                 h=figure;set(h, 'Visible', 'off');
+        %                                 h=figure;
+%                                         % Set visibility based on Display_figures
+%                                         if strcmp(Display_figures, 'true')
+%                                             set(h, 'Visible', 'on');
+%                                         else
+%                                             set(h, 'Visible', 'off');
+%                                         end
         %                                 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
         %                                 set(gcf, 'color', 'w');
         %                                 view(0, 90);
@@ -1133,7 +1221,13 @@ for i = start_step:max_num_files
         %                                         current_map_used = current_map_field;
         %                                     end
         %
-        %                                     h=figure;set(h, 'Visible', 'off');
+        %                                     h=figure;
+%                                                 % Set visibility based on Display_figures
+%                                                 if strcmp(Display_figures, 'true')
+%                                                     set(h, 'Visible', 'on');
+%                                                 else
+%                                                     set(h, 'Visible', 'off');
+%                                                 end
         %                                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
         %                                     set(gcf, 'color', 'w');
         %                                     view(0, 90);
@@ -1210,7 +1304,13 @@ for i = start_step:max_num_files
 
         if strcmp(output_figures_for_spherical_additional_postprocess,'true') && any(strcmp(output_additional_maps_figures, 'strain_rate'))
             %% Plot Strain rate
-            h=figure;set(h, 'Visible', 'off');
+            h=figure;
+            % Set visibility based on Display_figures
+            if strcmp(Display_figures, 'true')
+                set(h, 'Visible', 'on');
+            else
+                set(h, 'Visible', 'off');
+            end
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
             set(gcf, 'color', 'w');
             view(0, 90);
@@ -1254,6 +1354,7 @@ for i = start_step:max_num_files
             end
 
             ax2.SortMethod='childorder';
+            hold off;
 
             % Create the full path for the repository
             strain_rate_output = fullfile(path_model_output, 'Maps_strain_rate');
@@ -1295,7 +1396,14 @@ for i = start_step:max_num_files
             bin_edges_oce_age = 0:1:400;
 
             % Histogram
-            h=figure;set(h, 'Visible', 'off');set(gcf, 'color', 'w');
+            h=figure;
+            % Set visibility based on Display_figures
+            if strcmp(Display_figures, 'true')
+                set(h, 'Visible', 'on');
+            else
+                set(h, 'Visible', 'off');
+            end
+            set(gcf, 'color', 'w');
             yyaxis left;
             bin_counts = histcounts(oceanic_age_domain_only, bin_edges_oce_age);
             histogram(oceanic_age_domain_only, bin_edges_oce_age, 'FaceColor', 'blue', 'EdgeColor', 'black');hold on;
@@ -1344,7 +1452,13 @@ for i = start_step:max_num_files
         end
 
         if strcmp(output_figures_for_spherical_additional_postprocess,'true') && any(strcmp(output_additional_maps_figures, 'oceanic_age'))
-            h=figure;set(h, 'Visible', 'off');
+            h=figure;
+            % Set visibility based on Display_figures
+            if strcmp(Display_figures, 'true')
+                set(h, 'Visible', 'on');
+            else
+                set(h, 'Visible', 'off');
+            end
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
             set(gcf, 'color', 'w');
             view(0, 90);
@@ -1395,6 +1509,7 @@ for i = start_step:max_num_files
 
             %         quivermc(Yeq_lr, Xeq_lr, V_theta_vec_surface, V_phi_vec_surface,'color','k','linewidth',1,'units','Velocity (m.yr^-^1)','reference',scaling_velocity_factor_surface);
             ax2.SortMethod='childorder';
+            hold off;
 
 
             % Create the full path for the repository
@@ -1467,7 +1582,13 @@ for i = start_step:max_num_files
             %         grid on;
 
 
-            h=figure;set(h, 'Visible', 'off');
+            h=figure;
+            % Set visibility based on Display_figures
+            if strcmp(Display_figures, 'true')
+                set(h, 'Visible', 'on');
+            else
+                set(h, 'Visible', 'off');
+            end
             set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);clf;
             set(gcf, 'color', 'w');
             view(0, 90);
@@ -1512,6 +1633,7 @@ for i = start_step:max_num_files
                 ax3.SortMethod = 'childorder';
             end
             ax2.SortMethod='childorder';
+            hold off;
             %%
 
             % Create the full path for the repository
@@ -1615,9 +1737,42 @@ for i = start_step:max_num_files
                 %We just want a depth
                 current_depth = current_depth_subductions;
 
+
+                    if isnan(RMS_melt_surface) || isnan(RMS_melt_sublithosphere) || isnan(RMS_melt_depths)
+                    RMS_melt_surface_decoy = NaN;
+                    RMS_melt_sublithosphere_decoy=NaN;
+                    RMS_melt_depths_decoy=NaN;
+                    else
+                    RMS_melt_surface_decoy = [];
+                    RMS_melt_sublithosphere_decoy=[];
+                    RMS_melt_depths_decoy=[];
+                    end
+
                 for ttd= 1:ite_depth
                     filename_geofeatures = ['Geofeatures_' model_title '.csv'];
                     fullFilePath_geofeatures = fullfile(path_model_output, filename_geofeatures);
+                   
+                    % Assuming RMS_melt_surface, RMS_melt_sublithosphere, and RMS_melt_depths 
+                    % are defined and ttd is your index or loop variable
+                    
+                    % Check if any of the values are NaN and replace with 0 if true
+ 
+
+                    if isnan(RMS_melt_surface_decoy) || isnan(RMS_melt_sublithosphere_decoy) || isnan(RMS_melt_depths_decoy)
+                        if isnan(RMS_melt_surface_decoy)
+                            RMS_melt_surface = 0;
+                        end
+                        if isnan(RMS_melt_sublithosphere_decoy)
+                            RMS_melt_sublithosphere = 0;
+                        end
+                        if isnan(RMS_melt_depths_decoy)
+                            RMS_melt_depths = 0;
+                        end
+                    else
+                        RMS_melt_surface = RMS_melt_surface(ttd);
+                        RMS_melt_sublithosphere = RMS_melt_sublithosphere(ttd);
+                        RMS_melt_depths = RMS_melt_depths(ttd);
+                    end
 
                     % Check if the file already exists
                     if exist(fullFilePath_geofeatures, 'file')
@@ -1625,13 +1780,13 @@ for i = start_step:max_num_files
                         geofeatures = readtable(fullFilePath_geofeatures);
 
                         % Add new values to the existing table
-                        newRow = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,RMS_melt_surface(ttd),RMS_melt_sublithosphere(ttd),RMS_melt_depths(ttd), ...
+                        newRow = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,RMS_melt_surface,RMS_melt_sublithosphere,RMS_melt_depths, ...
                             'VariableNames', {'Time', 'NumPlumes', 'NumSubductions', 'NumSubduction_connected', 'Depths', 'Maxferet_mean', 'Maxferet_max', 'Maxferet_in', 'nferet', 'V_rms_surface', 'V_rms_continents','surface_rms_melt','sublithosphere_rms_melt','depths_rms_melt'});
 
                         geofeatures = vertcat(geofeatures, newRow);
                     else
                         % File doesn't exist, create a new table
-                        geofeatures = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,RMS_melt_surface(ttd),RMS_melt_sublithosphere(ttd),RMS_melt_depths(ttd),...
+                        geofeatures = table(time_for_output_structures, numPlumes(ttd), numSubductions(ttd), numSubduction_connected(ttd), current_depth(ttd)./1e3, Maxferet_mean(ttd), Maxferet_max(ttd), Maxferet_min(ttd), nferet(ttd), V_rms_surface, V_rms_continents,RMS_melt_surface,RMS_melt_sublithosphere,RMS_melt_depths,...
                             'VariableNames', {'Time', 'NumPlumes', 'NumSubductions', 'NumSubduction_connected', 'Depths', 'Maxferet_mean', 'Maxferet_max', 'Maxferet_in', 'nferet', 'V_rms_surface', 'V_rms_continents','surface_rms_melt','sublithosphere_rms_melt','depths_rms_melt'});
                     end
 
