@@ -3,6 +3,8 @@ function [geofeatures] = get_geodynamics_features_statistics(path_model_input, a
     write_geofeatures_statistics,remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
     additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize,visualize_model_at_specific_time,end_step,Display_figures,plot_an_additional_field_on_top_of_geofeatures)
 
+warning('off','all');
+
 allowed_parameters = {'subduction_and_plume_statistics','oceanic_age_statistics','continents_VRMS','melt_statistics'};
 % Check if averaged_parameter is allowed
 if ~all(ismember(additional_postprocesses, allowed_parameters))
@@ -1738,15 +1740,16 @@ for i = start_step:final_step
                 current_depth = current_depth_subductions;
 
 
-                    if isnan(RMS_melt_surface) || isnan(RMS_melt_sublithosphere) || isnan(RMS_melt_depths)
+                if any(isnan(RMS_melt_surface)) || any(isnan(RMS_melt_sublithosphere)) || any(isnan(RMS_melt_depths))
                     RMS_melt_surface_decoy = NaN;
-                    RMS_melt_sublithosphere_decoy=NaN;
-                    RMS_melt_depths_decoy=NaN;
-                    else
+                    RMS_melt_sublithosphere_decoy = NaN;
+                    RMS_melt_depths_decoy = NaN;
+                else
                     RMS_melt_surface_decoy = [];
-                    RMS_melt_sublithosphere_decoy=[];
-                    RMS_melt_depths_decoy=[];
-                    end
+                    RMS_melt_sublithosphere_decoy = [];
+                    RMS_melt_depths_decoy = [];
+                end
+
 
                 for ttd= 1:ite_depth
                     filename_geofeatures = ['Geofeatures_' model_title '.csv'];

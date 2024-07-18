@@ -20,9 +20,7 @@ clear all; close all; clc;
 % 9-Output dynamic topography
 % 10-Run Paraview spherical postprocess
 
-current_file_path = pwd;
-parent_directory = fileparts(current_file_path);
-addpath(genpath(parent_directory));
+addpath(genpath(pwd));
 postprocess_path = pwd;
 
 %% Parameter section
@@ -30,18 +28,20 @@ postprocess_path = pwd;
 
 % This path should stay one line for the auto postprocess so the line can
 % be replaced by a list of models
-path_models = {['/Volumes/Jerry/global_models_3d_extract/R01fSB3q_R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f001_viscCc5e19_cont150km_cbackground_Tsph_disl2/']};
+% path_models = {['/Users/ponsm/Desktop/modelblogin/model/globalscale/anulus2d/Miao_dong/Annulus_05d_VisCc5e19_Tcond31/']};
+path_models = {['/Users/ponsm/Desktop/software2/test_model/test_sphere/test_upmpref2/']};
+
 
 % Select a folder path where the images and data will be outputted if
 % necessary otherwise the default will be './output_folder/'
-selected_output_folder_path ='/Users/ponsm/Nextcloud/group_monitoring_earth_evolution_through_time/Research/Michael_Pons/models/Global_model_3D/';
+selected_output_folder_path ='/Users/ponsm/Nextcloud/group_monitoring_earth_evolution_through_time/Research/Michael_Pons/models/Annulus_2D/';
 % '/Users/ponsm/Library/CloudStorage/GoogleDrive-mikpons2@gmail.com/My Drive/Postdoc/collab/Rift_copy/Postprocess/';
 
 model_geometry = 'sphere';
 % 'box'; 
 
-Save_figures = 'true';
-Display_figures = 'false';
+Save_figures = 'false';
+Display_figures = 'true';
 
 % Model parameters
 
@@ -60,7 +60,7 @@ output_all_averaged_parameters_profiles='true';
 
 % Specify the statistic parameters to plot
 %if 'all' then output everything
-statistic_parameters = {'all'};
+statistic_parameters = {'Maximum topography'};
 % {'RMS velocity','temperature','Mobility','total RMS velocity'};
 %     {'Mobility', 'RMS','Divergence','Radial RMS','tangential RMS', 'total RMS velocity'};
 depth_average_for_friction = 5000;
@@ -83,7 +83,7 @@ plot_topography_end = 300e6; %to be changed by the user
 % Topography
 postprocess_topography = 'true';
 dt_topography = 20000; %should be consistent with the prm file
-resample_topography = 1; %Take topography every x files
+resample_topography = 10; %Take topography every x files
 %if a shift should be applied for the topography since the reference frame is not the sea level or geoid but the mantle
 % topography_shift = 2400; %m
 
@@ -107,7 +107,7 @@ read_layer_elevation_from_bottom_to_top = 'true';
 % calculate the dip of any topography or topolayer
 % will only work if postprocess_topography or postprocess_dynamic_topography
 % or postprocess_topography_layer are set to true
-calculate_topography_dip = 'true';
+calculate_topography_dip = 'false';
 calculate_topography_layer_dip = 'true';
 % Smoothing Interval for Topography
 % This parameter controls the spacing between points used for topography smoothing,
@@ -130,14 +130,10 @@ resample_heatflux = 5; %Take heatflux every x files
 % These statistics require an intermediary step of extraction of the data from paraview using
 % the python paraview script Global_extract_series.py accessible in
 % Python_paraview
-run_spherical_additional_postprocess = 'true';
+run_spherical_additional_postprocess = 'false';
 
 %Path where the data extracted by paraview are stored locally
 path_extracted_files_input ='/Volumes/Jerry/global_models_3d_extract/';
-
-% In case the user may just want to visualize the model at a specific time
-% or output the model at a specific time in My
-visualize_model_at_specific_time = ''; %My
 
 % This process can take a significant amount of time depending on the amount of files to process
 %therefore I had a restart option so the postprocessing does not need to
@@ -189,25 +185,14 @@ reference_time_My_to_Ma = 1000;
 
 % The user can load additional field to display as map such as
 % different compositions over depth and even define a threshold
-% give the additional fields to map as {'field 1';'field2'}
 additional_fields_to_load = {''}; 
 
-% Give the threshold and indicate if positive of negative using > or <, 
-% a empty case '' will plot the field with no threshold
-additional_fields_threshold = {'>0.05','>0.05','>0.25','>0.25','>0.25';...
-                                 '','','','',''};
-
-% the depth of the additional_fields to map can be given as below, let '' if no mapping is needed                              
-additional_fields_depths_to_visualize = {'150','440','1100','2600','2800';...
-                                         '150','440','','','' };
+additional_fields_threshold = {'>0.05','>0.25','>0.25','>0.25'};
 
 %this threshold will only be used to draw the contour of a field selected
 %if additional_fields_threshold is set to {''};
 default_threshold_fields = 0.25;
 
-% To overlay an additional field with a threshold on the geofeature map (e.g., 'llsvps' to check its distribution), 
-% the user can specify the desired field. The field and its threshold are read directly from the additional field variables.
-plot_an_additional_field_on_top_of_geofeatures = '';
 
 % Since the topography in Aspect is relatif to the mantle, we need to make
 % it relative to the sea level to compare, therefore we reduce the whole
@@ -219,7 +204,7 @@ topography_correction = -2400;
 % Global_extract_series.py and in Prm. If the continents have a different name in the prm, it should also be
 % replaced in the Python script.
 % Specify which name you use here for the plots.
-%if no continent specify 'nan'
+% Continents_name= 'nan';
 compositional_field_name_of_continents = 'continent';
 
 % The Time will be read from the paraview python files that were extracting but in case no Time field was extracted or found
@@ -500,10 +485,9 @@ for t = 1:numel(path_models)
 
                     % Plot with distinct colors for each time step
                     if strcmp(variables(varIndex),'viscosity')
-                        plot(average_params.(variables{varIndex})(index_time_for_var), average_params.depth(index_time_for_var)./1e3,  'Color', cmap(i, :), 'DisplayName', 'Effective Viscosity','LineWidth', 1);
-                            set(gca, 'XScale', 'log');
-                            title('Viscosity vs. Depth');
-                            xlim([5e19 1e25])
+                        plot(log10(average_params.(variables{varIndex})(index_time_for_var)), ...
+                            average_params.depth(index_time_for_var)./1e3, ...
+                            'Color', cmap(i, :), 'LineWidth', 1.5);
                     else
                         plot(average_params.(variables{varIndex})(index_time_for_var), ...
                             average_params.depth(index_time_for_var)./1e3, ...
@@ -540,7 +524,7 @@ for t = 1:numel(path_models)
                 end
 
                 c = colorbar('Ticks', linspace(0, 1, number_of_profiles_to_display), ...
-                    'TickLabels', arrayfun(@(x) sprintf('%.2f', x), unique_time_var(vec_interval_profils), 'UniformOutput', false));
+                    'TickLabels', arrayfun(@(x) sprintf('%.2f', x), unique_time_var(vec_interval_profils)./1e6, 'UniformOutput', false));
 
                 % Set color bar title
                 c.Label.String = 'Model Time (My)';
@@ -664,10 +648,6 @@ for t = 1:numel(path_models)
             if ~strcmp(model_geometry,'box')
             [time_elevation, elevation_topography, x_axis_interp, dip_topography] = get_topography_annulus(path_model, dt_topography, resample_topography, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
             xlabel('Annulus Degrees [deg]')
-            else
-             [time_elevation, elevation_topography, x_axis_interp, dip_topography] = get_topography_box(path_model, dt_topography, resample_topography, model_length, model_height, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
-            xlabel('Model length [m]')
-            end
             % Find the indices corresponding to the selected time interval
             start_index = find(time_elevation >= plot_topography_start, 1);
             end_index = find(time_elevation <= plot_topography_end, 1, 'last');
@@ -677,6 +657,19 @@ for t = 1:numel(path_models)
             % shift in the topography of 0.2 is added so 0 appears green not blue
             surf(x_axis_interp,time_elevation,elevation_topography./1e3+0.2);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]');zlabel('Elevation[km]');set(gcf,'color','w');
             c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
+            else
+             [time_elevation, elevation_topography, x_axis_interp, dip_topography] = get_topography_box(path_model, dt_topography, resample_topography, model_length, model_height, calculate_topography_dip, topography_smoothing_interval_for_dip_calculation);
+            xlabel('Model length [m]')
+            % Find the indices corresponding to the selected time interval
+            start_index = find(time_elevation >= plot_topography_start, 1);
+            end_index = find(time_elevation <= plot_topography_end, 1, 'last');
+            time_elevation=time_elevation(start_index:end_index);
+            elevation_topography=elevation_topography((start_index:end_index),:);
+            % Plot the sorted data with adjusted x axis , here a small
+            % shift in the topography of 0.2 is added so 0 appears green not blue
+            surf(x_axis_interp,time_elevation,elevation_topography./1e3+0.2);shading interp;c=colorbar;demcmap('inc',[5 -8],0.1);ylabel('Time[My]');zlabel('Elevation[km]');set(gcf,'color','w');
+            c.Label.String= "Elevations [km]";set(gcf,'color','w');view(2);%set(gca, 'color', 'none');grid off;set(gca,'XColor', 'none','YColor','none','ZColor','none'); % FaceLighting = 'gour
+            end
 
             % Set visibility based on Display_figures
             if strcmp(Display_figures, 'true')
@@ -1056,26 +1049,21 @@ for t = 1:numel(path_models)
         file_geofeatures_exists = exist(fullFilePath_geofeatures, 'file');
         init_step=0;
         if strcmp(restart_additional_postprocess,'auto')
-            [init_step, max_step,end_step] = get_last_timestep(path_model, path_model_output,output_additional_maps_figures,visualize_model_at_specific_time,Interval_of_time_output_for_additional_postprocess);
-            if ~isempty(visualize_model_at_specific_time)
-                if end_step>max_step
-                    disp('The time asked to ouput by visualize_model_at_specific_time does not exist.');
-                else
-                    disp(['Additional spherical postprocessing will visualize the model at time step ' num2str(end_step)]);
-                end
-            elseif isempty(visualize_model_at_specific_time) && init_step == max_step
+            [init_step, max_step] = get_last_timestep(path_model, path_model_output,output_additional_maps_figures);
+            if init_step == max_step
                 disp('The model has already finished computing the spherical additional postprocess.');
             else
                 disp(['Additional spherical postprocessing will start or restart from init_step ' num2str(init_step)]);
-            end
-            % If it doesn't exist then run the additional postprocess function
-            if  strcmp(restart_additional_postprocess,'auto') && (init_step < max_step) || ~isempty(visualize_model_at_specific_time) && (end_step<max_step)
-                [geofeatures] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,...
-                    plumes_non_adiabatic_tracking_temperature,subduction_non_adiabatic_tracking_temperature,trenches_elevation_threshold,path_model_output,...
-                    compositional_field_name_of_continents,output_figures_for_spherical_additional_postprocess,output_additional_maps_figures,write_geofeatures_statistics,...
-                    remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
-                    additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize,visualize_model_at_specific_time,end_step,Display_figures,plot_an_additional_field_on_top_of_geofeatures);
-                % If the file exists then plot 'subduction_and_plume_statistics'
+
+                % If it doesn't exist then run the additional postprocess function
+                if  strcmp(restart_additional_postprocess,'auto') && (init_step < max_step)
+                    [geofeatures] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,...
+                        plumes_non_adiabatic_tracking_temperature,subduction_non_adiabatic_tracking_temperature,trenches_elevation_threshold,path_model_output,...
+                        compositional_field_name_of_continents,output_figures_for_spherical_additional_postprocess,output_additional_maps_figures,write_geofeatures_statistics,...
+                        remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
+                        additional_fields_to_load,additional_fields_threshold,default_threshold_fields);
+                    % If the file exists then plot 'subduction_and_plume_statistics'
+                end
             end
         end
 
@@ -1174,7 +1162,6 @@ for t = 1:numel(path_models)
                 plot(uniqueTime, Vrms_surface, 'r-', 'LineWidth', 2, 'DisplayName', 'VRMS Surface');
 
                 % Adding labels and title
-                ylim([0, 0.1]);
                 xlabel('Time (My)');
                 ylabel('VRMS (m.yr^-^1)');
                 title('VRMS over Time for Surface and Continents only');
@@ -1231,7 +1218,6 @@ for t = 1:numel(path_models)
                     hold on;
                     plot(uniqueTime,Mobility_resol_mobility, 'r-', 'LineWidth', 2, 'DisplayName', 'Full Mobility');
                     xlim([min(uniqueTime), max(uniqueTime)]);
-                    ylim([0, 0.1]);
                     % Adding labels and title
                     xlabel('Time (My)');
                     ylabel('Continents Mobility');

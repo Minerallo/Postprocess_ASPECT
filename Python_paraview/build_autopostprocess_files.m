@@ -19,7 +19,7 @@ cd(path_to_postprocess_ASPECT);
 % model_names = {'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003', ...
 %     'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003'};
 
-model_names = {'R01fSB3i_R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f001_viscCc5e19_cont150km_Ediffbackground'};
+model_names = {'R01fSB4d_R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f001_viscCc1e21_cont150km_cbackground_Tsph_Adisl1'};
 %     'RSRW01a_Rodinia_2GPa_Mantle_C10MPa_SW_1em16_f064_to_f003_LR',...
 %     'P01a_Pangea_1GPa_Mantle_C40MPa_LR',  ...
 %     'P01c_Pangea_1GPa_Mantle_C60MPa_LR',  ...
@@ -169,7 +169,7 @@ for i = 1:numel(model_names)
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="*statistics*" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="depth_average.txt" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
     fprintf(fid, 'rsync -varz -e ''ssh -i %s'' --include="original.prm" --exclude="*" bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n', ssh_key, models_cluster_directory, model_names{i}, local_base_directory, model_names{i});
-    fprintf(fid, 'rsync -varz -e ''ssh -i %s'' bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n',ssh_key,remote_base_directory, model_names{i}, local_base_directory, model_names{i});
+    fprintf(fid, 'rsync -varz --ignore-existing -e ''ssh -i %s'' bbkponsm@blogin.hlrn.de:%s%s/ %s%s/.\n',ssh_key,remote_base_directory, model_names{i}, local_base_directory, model_names{i});
 end
 
 fclose(fid);
@@ -258,7 +258,7 @@ fprintf(fid,'# This script automatize the the extraction of the data and the pos
 fprintf(fid, '\n');
 fprintf(fid,'echo "Building sshfs connection of the remote server."\n');
 fprintf(fid, '\n');
-% fprintf(fid, 'umount -f ~/Desktop/modelblogin\n');
+fprintf(fid, '#umount -f ~/Desktop/modelblogin\n');
 fprintf(fid, '\n');
 fprintf(fid, 'sshfs -o "IdentityFile=/Users/ponsm/.ssh/id_rsa_hlrn" bbkponsm@blogin.hlrn.de:/scratch/usr/bbkponsm /Users/ponsm/Desktop/modelblogin -o defer_permissions\n');
 fprintf(fid, '\n');
@@ -307,7 +307,7 @@ fprintf(fid,'# This script automatize the the extraction of the data and the pos
 fprintf(fid, '\n');
 fprintf(fid,'echo "Building sshfs connection of the remote server."\n');
 fprintf(fid, '\n');
-% fprintf(fid, 'umount -f ~/Desktop/modelblogin\n');
+fprintf(fid, '#umount -f ~/Desktop/modelblogin\n');
 fprintf(fid, '\n');
 fprintf(fid, 'sshfs -o "IdentityFile=/Users/ponsm/.ssh/id_rsa_hlrn" bbkponsm@blogin.hlrn.de:/scratch/usr/bbkponsm /Users/ponsm/Desktop/modelblogin -o defer_permissions\n');
 fprintf(fid, '\n');
