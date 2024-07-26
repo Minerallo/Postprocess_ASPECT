@@ -1,4 +1,4 @@
-function [geofeatures] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,plumes_non_adiabatic_tracking_temperature,...
+function [geofeatures,diff_mean_surface_topography] = get_geodynamics_features_statistics(path_model_input, additional_postprocesses,plumes_depths_tracking,subduction_depths_tracking,plumes_non_adiabatic_tracking_temperature,...
     subduction_non_adiabatic_tracking_temperature,trenches_elevation_threshold,path_model_output,compositional_field_name_of_continents,output_figures_for_spherical_additional_postprocess,output_additional_maps_figures,...
     write_geofeatures_statistics,remove_subductions_to_oceanic_age,init_step,Interval_of_time_output_for_additional_postprocess,topography_correction,reference_time_My_to_Ma,plot_continents_border_from_reconstruction,...
     additional_fields_to_load,additional_fields_threshold,default_threshold_fields,additional_fields_depths_to_visualize,visualize_model_at_specific_time,end_step,Display_figures,plot_an_additional_field_on_top_of_geofeatures)
@@ -52,6 +52,7 @@ RMS_melt_surface = default_value;
 RMS_melt_depths = default_value;
 RMS_melt_sublithosphere = default_value;
 
+diff_mean_surface_topography=[];
 surface_additional_fields_to_load_map = [];
 lithosphere_additional_fields_to_load_map = [];
 depths_additional_fields_to_load_map = [];
@@ -602,6 +603,58 @@ for i = start_step:final_step
             smooth_Topo = imgaussfilt(Topo,0.3);
             Topo_corrected=smooth_Topo+topography_correction; %apply correction from bathymetry to sea levl
             Topo_corrected(idx_oceans) = Topo_corrected(idx_oceans) - (Topo_corrected(idx_oceans)<0).* (1000 / 3300).* abs(Topo_corrected(idx_oceans));
+            
+
+
+
+          colormap_name = 'Oleron_256';
+            oleron_256 = load_modified_colors(colormap_name);
+            num_lines  = size(oleron_256,1);
+
+            Topo_color = interp1(oleron_256(:, 1),oleron_256(:, 2:end), linspace(min(oleron_256(:, 1)), max(oleron_256(:, 1)), num_lines));
+
+            h=figure;
+            % Set visibility based on Display_figures
+            %         figure;
+            set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96],'color','w');clf;
+            view(0, 90);
+            axesm mercator;
+            framem;
+            gridm;
+            ax0 = gca;
+            setm(ax0, 'MapProjection', 'robinson');
+            geoimg = geoshow(Yeq, Xeq,Topo_corrected,'DisplayType', 'texturemap'); % save object
+            shadem(-14.5,[210 75]);
+            geoimg.AlphaDataMapping = 'none'; % interpet alpha values as transparency values
+            geoimg.FaceAlpha = 'texturemap'; % Indicate that the transparency can be different each pixel
+            alpha(geoimg,double(~isnan(Topo_corrected)));
+
+            % Number of lines in the gradient
+            colormap(ax0,Topo_color./num_lines); clim([-8500 4500]);
+            c0=colorbar('Position',[0.1 0.18 0.02 0.66]);
+            c0.Label.String= "Elevations [m]";
+            c0.Label.FontSize = 14;
+            hold on;
+            ax2 = gca;
+            setm(ax2, 'MapProjection', 'robinson');
+            geoshow(Yeq, Xeq,continents_reversed_position_for_plot_dark,'facealpha', 0);
+            contourm(Yeq,Xeq, continents, 0.3, 'k','LineWidth',2);
+            contourm(Yeq,Xeq, contour_continents_init, 0.3, 'w','LineWidth',2);
+            %         contourm(Yeq,Xeq, continents_init, 0.3, 'w','LineWidth',2);
+            %         quivermc(Yeq_lr, Xeq_lr, V_theta_vec_surface, V_phi_vec_surface,'color','k','linewidth',1,'units','Velocity (m.yr^-^1)','reference',scaling_velocity_factor_surface);
+            %             plume_str = ['Plumes = ' num2str(numPlumes)];
+            %             subduction_str = ['Subductions = ' num2str(numSubductions)];
+            %             title([{time_str} plume_str subduction_str]);
+            title({time_str});
+
+
+
+
+
+
+
+
+
             %         abs(nanmean(Topo_corrected(idx_oceans)))+abs(nanmean(Topo_corrected(idx_cont)))
 
             %With 1900m readjustement due to wrong continent that needs some
@@ -631,10 +684,10 @@ for i = start_step:final_step
             ax0 = gca;
             setm(ax0, 'MapProjection', 'robinson');
             geoimg = geoshow(Yeq, Xeq,Topo_corrected,'DisplayType', 'texturemap'); % save object
-            shadem(-14.5,[210 75])
+            shadem(-14.5,[210 75]);
             geoimg.AlphaDataMapping = 'none'; % interpet alpha values as transparency values
             geoimg.FaceAlpha = 'texturemap'; % Indicate that the transparency can be different each pixel
-            alpha(geoimg,double(~isnan(Topo_corrected)))
+            alpha(geoimg,double(~isnan(Topo_corrected)));
 
             % Number of lines in the gradient
             colormap(ax0,Topo_color./num_lines); clim([-8500 4500]);
@@ -656,7 +709,7 @@ for i = start_step:final_step
             if strcmp(plot_continents_border_from_reconstruction,'true')
 
                 ax3 = gca;
-                setm(ax3, 'MapProjection', 'robinson')
+                setm(ax3, 'MapProjection', 'robinson');
                 %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
                 geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
 
@@ -878,7 +931,7 @@ for i = start_step:final_step
                     if strcmp(plot_continents_border_from_reconstruction,'true')
 
                         ax3 = gca;
-                        setm(ax3, 'MapProjection', 'robinson')
+                        setm(ax3, 'MapProjection', 'robinson');
                         %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
                         geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
 
@@ -888,7 +941,7 @@ for i = start_step:final_step
                     if ~isempty(plot_an_additional_field_on_top_of_geofeatures)
 
                         ax4 = gca;
-                        setm(ax4, 'MapProjection', 'robinson')
+                        setm(ax4, 'MapProjection', 'robinson');
                         %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
 %                         geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
                      geoshow(Yeq, Xeq, current_map_used,'FaceAlpha',0.4);
@@ -1030,7 +1083,7 @@ for i = start_step:final_step
 
                                     if strcmp(plot_continents_border_from_reconstruction,'true')
                                         ax3 = gca;
-                                        setm(ax3, 'MapProjection', 'robinson')
+                                        setm(ax3, 'MapProjection', 'robinson');
                                         %             geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32], 'EdgeColor', [0.41 0.38 0.32], 'LineWidth', 2, 'FaceAlpha', 0.1);
                                         geoshow(shape_continents, 'DisplayType', 'polygon', 'FaceColor', [0.61 0.38 0.32],'EdgeColor', 'none', 'LineWidth', 1, 'FaceAlpha', 0.15);
 
