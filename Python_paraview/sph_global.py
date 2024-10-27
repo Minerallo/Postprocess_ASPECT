@@ -19,13 +19,14 @@ with warnings.catch_warnings():
 
     
 #folder_path = '/Volumes/Jerry/global_models_3d/R01e_Rodinia_2GPa_Mantle_C20MPa_f003_LR/'
-data_file_path = '/Volumes/Jerry/global_models_3d_extract/R01e_Rodinia_2GPa_Mantle_C20MPa_f003_LR/'
+data_file_path = 
+# '/Volumes/Jerry/global_models_3d_extract/R01e_Rodinia_2GPa_Mantle_C20MPa_f003_LR/'
 
 
-model_start_time = 1000  # [Ma]
+#model_start_time = 1000  # [Ma]
 lmax = 24
 spacing = 180 / (2 * lmax + 2)
-file_interval = 60
+file_interval = 10
 
 # Function to extract the numeric part of the filename
 def extract_number(filename):

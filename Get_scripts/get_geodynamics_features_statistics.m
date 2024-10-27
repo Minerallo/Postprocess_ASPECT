@@ -738,7 +738,8 @@ for i = start_step:final_step
 
         if any(strcmp(additional_postprocesses, 'subduction_and_plume_statistics')) && i<=min([num_files_surface, num_files_depths])
             %% Track plumes and subductions over depths
-            for tt= 1:numel(plumes_depths_tracking)
+            for tt= 1
+%                 :numel(plumes_depths_tracking)
                 matching_depths_plumes_indices = find(ismember(unique_depths, plumes_depths_tracking(tt).*1e3));
                 current_depth_plumes(tt)=unique_depths(matching_depths_plumes_indices);
                 plumes_position = non_adiabT_depths{matching_depths_plumes_indices}>plumes_non_adiabatic_tracking_temperature(tt);
@@ -758,13 +759,135 @@ for i = start_step:final_step
                     current_depth_subductions(tt)=unique_depths(matching_depths_subductions_indices);
                     subductions_position = non_adiabT_depths{matching_depths_subductions_indices}<subduction_non_adiabatic_tracking_temperature(tt);
                     subductions_position2=1-subductions_position;
-                    cmatrix_subduction = contourm(Yeq,Xeq, non_adiabT_depths{matching_depths_subductions_indices}, [-90000 subduction_non_adiabatic_tracking_temperature(tt)], 'b','LineWidth',2);
+%                     [cmatrix_subduction,hmatrix_subduction] = contourm(Yeq,Xeq, non_adiabT_depths{matching_depths_subductions_indices}, [-90000 subduction_non_adiabatic_tracking_temperature(tt)], 'b','LineWidth',2);
+%                     [cmatrix_subduction,hmatrix_subduction] = contourm(Yeq,Xeq, non_adiabT_depths{matching_depths_subductions_indices}, subduction_non_adiabatic_tracking_temperature(tt), 'b','LineWidth',2);
 
                     %For plot
                     %                 subductions_position3 = ind2rgb(subductions_position2 + 1, CMap_subduction);
 
                 end
                 %            cmatrix_boundaries = contourm(Yeq,Xeq, log10(strain_rate), [5e-15 1], 'm','LineWidth',2);
+
+                % Generate the contour matrix using contourm
+                [cmatrix_subduction, hmatrix_subduction] = contourm(Yeq, Xeq, non_adiabT_depths{matching_depths_subductions_indices}, ...
+                    [-90000 subduction_non_adiabatic_tracking_temperature(tt)], 'b', 'LineWidth', 2);
+                    
+                [x_subduction, y_subduction] = C2xyz(cmatrix_subduction);
+                    polyin_subductions = polyshape(x_subduction, y_subduction);
+                    numSubductions(tt) = polyin_subductions.NumRegions;
+
+% 
+%                     % Generate the contour matrix using contourm
+% [cmatrix_subduction, hmatrix_subduction] = contourm(Yeq, Xeq, non_adiabT_depths{matching_depths_subductions_indices}, ...
+%     [-90000 subduction_non_adiabatic_tracking_temperature(tt)], 'b', 'LineWidth', 2);
+% 
+% % Convert the contour matrix to x and y coordinates (lon and lat)
+% [x_subduction, y_subduction] = C2xyz(cmatrix_subduction);
+% polyin_subductions = geopolyshape(y_subduction, x_subduction);  % lat, lon order for geopolyshape
+% 
+% g = geocrs(4326);
+% polyin_subductions.GeographicCRS = g;
+% class(polyin_subductions)
+% lakes = readgeotable("worldlakes.shp")
+% 
+% % shape = lakes.Shape
+% A = area(shape);
+% shape=polyin_subductions
+% A = area(shape);
+%     lat_region_poly = shape.Vertices{k}(:,2);  % Extract latitude for k-th region
+%     lon_region_poly = shape.Vertices{k}(:,1);  % Extract longitude for k-th region
+%     GT = geotable2table(polyin_subductions)
+%     % [lat_region_poly, lon_region_poly] = boundary(polyin_subductions, 1);
+% % [lat,lon]=geotable2table(polyin_subductions,["Lat","Lon"])
+% 
+% % Loop through each region (polygon) in the geopolyshape
+% for k = 1:polyin_subductions.NumRegions
+%     % Extract the latitude and longitude coordinates of the k-th polygon
+%     [lats, lons] = boundary(polyin_subductions, k);
+%     
+%     % Calculate the area of the k-th polygon using the polygon_area function
+%     radius = 6378137;  % Earth's radius in meters
+%     area_m2 = polygon_area(lats, lons, radius);
+%     
+%     % Display the area of the polygon in square meters
+%     disp(['Area of polygon ', num2str(k), ': ', num2str(area_m2), ' square meters']);
+% end
+% 
+% 
+% polygon_area(lats, lons, radius)
+% 
+% 
+% % Plot the polygons
+% figure;
+% geoplot(polyin_subductions);
+% title('Subduction Polygons');
+% geobasemap('none');
+% 
+% 
+% % Verify that the CRS is applied
+% disp(polyin_subductions.GeographicCRS);
+% 
+%     % Calculate the area of the polygons
+%   areas_m2 = area(polyin_subductions);     
+%     % Convert the areas from square meters to square kilometers
+%     areas_km2 = areas_m2 / 1e6;
+%     
+%     % Display the area of each polygon
+%     for k = 1:length(areas_km2)
+%         disp(['Area of region ', num2str(k), ': ', num2str(areas_km2(k)), ' km^2']);
+%     end
+%     
+%     % Display the total area of all polygons
+%     total_area_km2 = sum(areas_km2);
+%     disp(['Total area of all subduction polygons: ', num2str(total_area_km2), ' km^2']);
+% 
+% end
+% 
+% 
+%                     figure;
+%                     % Set visibility based on Display_figures
+%                     if strcmp(Display_figures, 'true')
+%                         set(h, 'Visible', 'on');
+%                     else
+%                         set(h, 'Visible', 'off');
+%                     end
+%                     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96],'color','w');clf;
+%                     set(gcf, 'color', 'w');
+%                     view(0, 90);
+%                     ax1 = gca;
+%                     axesm mercator;
+%                     framem;
+%                     gridm;
+%                     geoshow(Yeq, Xeq,subductions_position2,'FaceAlpha',0.5);
+%                     setm(ax1, 'MapProjection', 'robinson');
+%                     
+%                     lat_subduction = cmatrix_subduction(2, :);
+%                     lon_subduction = cmatrix_subduction(1, :);
+% 
+% %                     R_earth = 6371000-subduction_depths_tracking(tt)*1e3;  % Earth's radius in meters
+%                     
+% %                     % Convert latitude and longitude from degrees to radians
+% %                     lat_subduction_rad = deg2rad(lat_subduction);
+% %                     lon_subduction_rad = deg2rad(lon_subduction);
+%                     
+%                     % Calculate the surface area enclosed by the subduction contour using spherical geometry
+%                     % 'areaint' is the function that calculates area on a spherical surface
+%                     surface_area_m2 = areaint(lat_subduction, lon_subduction);  % in m^2
+%                     
+%                     % Display the surface area
+%                     disp(['Surface area enclosed by the subduction contour: ', num2str(surface_area_m2), ' m^2']);
+%                     
+%                     % Define the subduction rate in meters per year (this value must be known or given)
+%                     subduction_rate_m_per_year = 0.05;  % Example value: 5 cm/yr (adjust this with the real value)
+%                     
+%                     % Calculate flux in m^2/yr
+%                     flux_m2_per_year = surface_area_m2 * subduction_rate_m_per_year;
+%                     
+%                     % Convert flux to km^2/yr by dividing by 1,000,000
+%                     flux_km2_per_year = flux_m2_per_year / 1e6;
+%                     
+%                     % Display the flux in km^2/yr
+%                     disp(['Flux through the subduction contour: ', num2str(flux_km2_per_year), ' km^2/yr']);
                 %%
                 if isempty(cmatrix_plume)
                     numPlumes(tt) = 0;
@@ -907,6 +1030,7 @@ for i = start_step:final_step
                         subductions_position3 = ind2rgb(subductions_position2 + 1, CMap_subduction);
                         cmatrix_subduction = contourm(Yeq,Xeq, non_adiabT_depths{matching_depths_subductions_indices}, [-90000 subduction_non_adiabatic_tracking_temperature(tt)], 'b','LineWidth',2);
                     end
+
                     geoshow(Yeq, Xeq,subductions_position3,'FaceAlpha',0.5);
                     boundaries_position3 = ind2rgb(Plate_boundaries2+1, CMap_boundaries);
                     %                     We can visualize strain rate only for the surface layers
