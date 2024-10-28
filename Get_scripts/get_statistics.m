@@ -37,11 +37,11 @@ function [data_stats, stats_number, header, available_indices] = get_statistics(
         available_indices(i) = str2double(regexp(extractBefore(available_parameters{i}, ':'), '\d+', 'match'));
     end
 
-    if isempty(available_indices)
-        % If no specified statistic parameters were found in the header
-        error_msg = sprintf('The following specified statistic parameters were not found in the header:\n%s\nAvailable parameters: %s', strjoin(statistic_parameters, ', '), strjoin(header, ', '));
-        error(error_msg);
-    end
+%     if isempty(available_indices)
+%         % If no specified statistic parameters were found in the header
+%         error_msg = sprintf('The following specified statistic parameters were not found in the header:\n%s\nAvailable parameters: %s', strjoin(statistic_parameters, ', '), strjoin(header, ', '));
+%         error(error_msg);
+%     end
 
     %Get the data
     for i =1:stats_number

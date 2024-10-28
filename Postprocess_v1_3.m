@@ -21,8 +21,9 @@ clear all; close all; clc;
 % 10-Run Paraview spherical postprocess
 
 current_file_path = pwd;
-parent_directory = fileparts(current_file_path);
-addpath(genpath(parent_directory));
+% parent_directory = fileparts(current_file_path);
+% addpath(genpath(parent_directory));
+addpath(genpath(current_file_path));
 postprocess_path = pwd;
 
 %% Parameter section
@@ -31,7 +32,7 @@ postprocess_path = pwd;
 % This path should stay one line for the auto postprocess so the line can
 % be replaced by a list of models
 % path_models = {['/Volumes/Jerry/global_models_3d_extract/R01e_Rodinia_2GPa_Mantle_C20MPa_f003_LR/']};
-path_models ={'/Users/ponsm/Desktop/modelblogin/model/globalscale/sphere3d/R01fSB3f_R01f_Rodinia_2GPa_Mantle_C10MPa_f02_LR_SB_f001_viscCc5e19_cont150km/'}
+path_models ={'/Users/ponsm/Desktop/software2/test_model/test_sphere/fastscape_sphere/test_shrinking'}
 % path_models ={'/Users/ponsm/Desktop/modelblogin/model/globalscale/sphere3d/R01fSB3e_R01f_Rodinia_2GPa_Mantle_C10MPa_f01_LR_SB_f001_viscCc5e19_cont150km/'}
 % path_models ={'/Users/ponsm/Desktop/modelblogin/model/globalscale/sphere3d/R01fSB3d_R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f001_viscCc5e19_cont150km/'}
 

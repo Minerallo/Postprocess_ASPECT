@@ -497,6 +497,9 @@ fprintf(fid, '#!/bin/bash\n\n');
 fprintf(fid, '\n');
 fprintf(fid,'# This script automatize the the extraction of the data and the postprocessing of the model to the making of the figures\n');
 fprintf(fid, '\n');
+% Define postprocess_choice as a comma-separated list of options or leave empty for no post-process
+fprintf(fid, 'postprocess_choice="%s";  # Modify as needed (e.g., "sph", "fatbox", "sph, fatbox", or leave empty)\n\n', postprocess_choices);
+fprintf(fid, '\n');
 fprintf(fid,'echo "Building sshfs connection of the remote server."\n');
 fprintf(fid, '\n');
 fprintf(fid, '#umount -f ~/Desktop/modelblogin\n');
@@ -514,15 +517,20 @@ fprintf(fid, '\n');
 fprintf(fid, 'echo "Running Pvbatch %s on the remote server"\n',jobname);
 fprintf(fid, ['ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ', ...
     '''cd %s%s/; ', ...
-    'sbatch -p cpu-clx:large -t 12:00:00 -N 1 --tasks-per-node 96 -o %%j.output -e %%j.error --mem=747000mb --account bbkponsm --job-name %s ', ...
+    '/usr/local/slurm/bin/sbatch -p cpu-clx:large -t 12:00:00 -N 1 --tasks-per-node 96 -o %%j.output -e %%j.error --mem=747000mb --account bbkponsm --job-name %s ', ...
     '%s%s/jobparaview_global3D.sh''\n'],remote_Postprocess_scripts,output_directory,jobname,remote_Postprocess_scripts,output_directory);
-fprintf(fid, ['ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ', ...
+% Add conditional check for "sph" in postprocess_choice
+fprintf(fid, 'if [[ "$postprocess_choice" == *"sph"* ]]; then\n');
+fprintf(fid, '    echo "Running Pvbatch %s on the remote server for depth contour processing"\n', jobname_sph);
+fprintf(fid, ['    ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ', ...
     '''cd %s%s/; ', ...
-    'sbatch -p cpu-clx:large -t 12:00:00 -N 1 --tasks-per-node 96 -o %%j.output -e %%j.error --mem=747000mb --account bbkponsm --job-name %s ', ...
-    '%s%s/jobparaview_global3D_depths_contour.sh''\n'],remote_Postprocess_scripts,output_directory,jobname_sph,remote_Postprocess_scripts,output_directory);
+    '/usr/local/slurm/bin/sbatch -p cpu-clx:large -t 12:00:00 -N 1 --tasks-per-node 96 -o %%j.output -e %%j.error --mem=747000mb --account bbkponsm --job-name %s ', ...
+    '%s%s/jobparaview_global3D_depths_contour.sh''\n'], remote_Postprocess_scripts, output_directory, jobname_sph, remote_Postprocess_scripts, output_directory);
+fprintf(fid, 'fi\n');
+fprintf(fid, '\n');
 fprintf(fid, '\n');
 fprintf(fid, '# Wait for the job to finish\n');
-fprintf(fid, 'while ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ''squeue -n %s'' | grep -q %s; do\n',jobname,jobname);
+fprintf(fid, 'while ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ''/usr/local/slurm/bin/squeue -n %s'' | grep -q %s; do\n',jobname,jobname);
 fprintf(fid, '    echo "Job %s batch is running on the remote server. Waiting..."\n',jobname);
 fprintf(fid, '    sleep 20  # Adjust the sleep interval\n');
 fprintf(fid, 'done\n');
@@ -538,8 +546,6 @@ fprintf(fid, '#/Applications/MATLAB_R2022b.app/bin/matlab -nodisplay -r "run(''/
 fprintf(fid, '/Applications/MATLAB_R2022b.app/bin/matlab -nodisplay -r "try; run(''/Users/ponsm/Desktop/Postprocess_ASPECT/%s/Postprocess_auto_generated''); catch; disp(''Error: The MATLAB Postprocess encountered an issue.''); end; quit"\n',output_directory);
 
 fprintf(fid, '\n');
-% Define postprocess_choice as a comma-separated list of options or leave empty for no post-process
-fprintf(fid, 'postprocess_choice="%s";  # Modify as needed (e.g., "sph", "fatbox", "sph, fatbox", or leave empty)\n\n', postprocess_choices);
 
 % Check if postprocess_choice is empty
 fprintf(fid, 'if [ -z "$postprocess_choice" ]; then\n');
@@ -551,7 +557,7 @@ fprintf(fid, '    IFS=", " read -r -a choices <<< "$postprocess_choice"\n');
 
 % Check if "sph" is one of the choices and, if so, wait for the job and copy models
 fprintf(fid, '    if [[ " ${choices[@]} " =~ " sph " ]]; then\n');
-fprintf(fid, '        while ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ''squeue -n %s'' | grep -q %s; do\n', jobname_sph, jobname_sph);
+fprintf(fid, '        while ssh -i /Users/ponsm/.ssh/id_rsa_hlrn bbkponsm@blogin.hlrn.de ''/usr/local/slurm/bin/squeue -n %s'' | grep -q %s; do\n', jobname_sph, jobname_sph);
 fprintf(fid, '            echo "Job %s batch is running on the remote server. Waiting..."\n', jobname_sph);
 fprintf(fid, '            sleep 20  # Adjust the sleep interval\n');
 fprintf(fid, '        done\n\n');
