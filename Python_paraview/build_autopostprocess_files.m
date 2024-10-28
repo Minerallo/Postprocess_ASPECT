@@ -330,11 +330,12 @@ fid_slurm = fopen(output_pvbatch_jobscript, 'w');
 %%%%RL9
 fprintf(fid_slurm, '#!/bin/bash\n\n');
 fprintf(fid_slurm, '#SBATCH -A bbk00014\n');
-fprintf(fid_slurm, 'module unload openmpi/gcc/5.0.3 anaconda3 paraview\n\n');
-fprintf(fid_slurm, 'ml impi\n\n');
+fprintf(fid_slurm, 'module load HRZIBenv sw.clx.el9 slurm anaconda3/2023.09\n\n');
+fprintf(fid_slurm, 'module unload openmpi/gcc/5.0.3\n\n');
+fprintf(fid_slurm, 'module load impi\n\n');
 fprintf(fid_slurm, '\n');
 fprintf(fid_slurm, '\n');
-fprintf(fid_slurm, 'mpirun --map-by socket:pe=$OMP_NUM_THREADS /sw/viz/paraview/x86_64.el9/ParaView-headless-5.13.1-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch %s%s/Model_extract_global_3D_auto.py\n',remote_Postprocess_scripts,output_directory);
+fprintf(fid_slurm, '/sw/comm/impi/mpi/2021.13/bin/mpirun -np 96 /sw/viz/paraview/x86_64.el9/ParaView-headless-5.13.1-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch %s%s/Model_extract_global_3D_auto.py\n',remote_Postprocess_scripts,output_directory);
 fclose(fid_slurm);
 %%%CentOS7
 % fprintf(fid_slurm, '#!/bin/bash\n\n');
@@ -358,11 +359,12 @@ fid_slurm = fopen(output_pvbatch_jobscript, 'w');
 %%%%RL9
 fprintf(fid_slurm, '#!/bin/bash\n\n');
 fprintf(fid_slurm, '#SBATCH -A bbk00014\n');
-fprintf(fid_slurm, 'module unload openmpi/gcc/5.0.3 anaconda3 paraview\n\n');
-fprintf(fid_slurm, 'ml impi\n\n');
+fprintf(fid_slurm, 'module load HRZIBenv sw.clx.el9 slurm anaconda3/2023.09\n\n');
+fprintf(fid_slurm, 'module unload openmpi/gcc/5.0.3\n\n');
+fprintf(fid_slurm, 'module load impi\n\n');
 fprintf(fid_slurm, '\n');
 fprintf(fid_slurm, '\n');
-fprintf(fid_slurm, 'mpirun --map-by socket:pe=$OMP_NUM_THREADS /sw/viz/paraview/x86_64.el9/ParaView-headless-5.13.1-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch %s%s/depths_contour_auto.py\n',remote_Postprocess_scripts,output_directory);
+fprintf(fid_slurm, '/sw/comm/impi/mpi/2021.13/bin/mpirun -np 96 /sw/viz/paraview/x86_64.el9/ParaView-headless-5.13.1-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch %s%s/depths_contour_auto.py\n',remote_Postprocess_scripts,output_directory);
 fclose(fid_slurm);
 
 %%%%old 2023 CentOS7
