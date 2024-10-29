@@ -27,7 +27,8 @@ cd(path_to_postprocess_ASPECT);
 % model_names = {'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003', ...
 %     'R01f_Rodinia_2GPa_Mantle_C10MPa_f005_LR_SB_f003'};
 
-model_names = {'V07d_R01f_Rodinia_init_RL9_ref_minvisc1e20_ContEx10_refn_F03_f0045_SW2em16_test'};
+model_names = {'V07e_R01f_Rodinia_init_RL9_ref_minvisc1e20_ContEx10_refn_F03_f0045_SW2em16_Normproj'};
+%     'V07d_R01f_Rodinia_init_RL9_ref_minvisc1e20_ContEx10_refn_F03_f0045_SW2em16_test'};
 %     'RSRW01a_Rodinia_2GPa_Mantle_C10MPa_SW_1em16_f064_to_f003_LR',...
 %     'P01a_Pangea_1GPa_Mantle_C40MPa_LR',  ...
 %     'P01c_Pangea_1GPa_Mantle_C60MPa_LR',  ...
@@ -330,6 +331,7 @@ fid_slurm = fopen(output_pvbatch_jobscript, 'w');
 %%%%RL9
 fprintf(fid_slurm, '#!/bin/bash\n\n');
 fprintf(fid_slurm, '#SBATCH -A bbk00014\n');
+fprintf(fid_slurm, 'source /etc/profile\n\n');
 fprintf(fid_slurm, 'module load HRZIBenv sw.clx.el9 slurm anaconda3/2023.09\n\n');
 fprintf(fid_slurm, 'module unload openmpi/gcc/5.0.3\n\n');
 fprintf(fid_slurm, 'module load impi\n\n');
@@ -359,6 +361,7 @@ fid_slurm = fopen(output_pvbatch_jobscript, 'w');
 %%%%RL9
 fprintf(fid_slurm, '#!/bin/bash\n\n');
 fprintf(fid_slurm, '#SBATCH -A bbk00014\n');
+fprintf(fid_slurm, 'source /etc/profile\n\n');
 fprintf(fid_slurm, 'module load HRZIBenv sw.clx.el9 slurm anaconda3/2023.09\n\n');
 fprintf(fid_slurm, 'module unload openmpi/gcc/5.0.3\n\n');
 fprintf(fid_slurm, 'module load impi\n\n');
